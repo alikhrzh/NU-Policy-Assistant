@@ -44,4 +44,5 @@ for query in queries:
     question["expected_pages"] = source["expected_pages"]
     questions.append(question)
 
-
+with open("data/eval/questions.json", "w", encoding="utf-8") as json_file:
+    json.dump(questions , json_file, ensure_ascii=False, indent=2)

@@ -1,0 +1,67 @@
+[
+  {
+    "question_id": "001",
+    "language": "en",
+    "question": "Can I take more than 36 credits in one semester",
+    "document_id": "undergraduate-academic-policies",
+    "expected_sections": [
+      "3.3.7"
+    ],
+    "expected_pages": [
+      5
+    ]
+  },
+  {
+    "question_id": "002",
+    "language": "en",
+    "question": "If I fail a course, can I retake it?",
+    "document_id": "undergraduate-academic-policies",
+    "expected_sections": [
+      "3.20.1"
+    ],
+    "expected_pages": [
+      15,
+      16
+    ]
+  },
+  {
+    "question_id": "003",
+    "language": "en",
+    "question": "Will withdrawing from a course affect my GPA?",
+    "document_id": "undergraduate-academic-policies",
+    "expected_sections": [
+      "3.3.12"
+    ],
+    "expected_pages": [
+      5
+    ]
+  },
+  {
+    "question_id": "004",
+    "language": "en",
+    "question": "What happens if I miss too many classes?",
+    "document_id": "undergraduate-academic-policies",
+    "expected_sections": [
+      "3.4.2",
+      "3.4.3",
+      "3.4.4",
+      "3.4.5"
+    ],
+    "expected_pages": [
+      6
+    ]
+  },
+  {
+    "question_id": "005",
+    "language": "en",
+    "question": "How many semesters can I stay on academic probation??",
+    "document_id": "undergraduate-academic-policies",
+    "expected_sections": [
+      "3.16.4",
+      "3.16.5"
+    ],
+    "expected_pages": [
+      14
+    ]
+  }
+]
