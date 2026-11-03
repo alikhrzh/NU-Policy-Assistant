@@ -18,32 +18,67 @@ for chunk in undergraduate_academic_policies_chunks:
 
 embeddings = model.encode(passages, convert_to_tensor=True, normalize_embeddings=True, show_progress_bar=True)
 
-query1_eng = "query: How many credits student should take in one semester"
-query1_rus = "query: Сколько кредитов нужно брать за семестр?"
+query1_eng = "query: Can I take more than 36 credits in one semester"
+query2_eng = "query: If I fail a course, can I retake it?"
+query3_eng = "query: Will withdrawing from a course affect my GPA?"
+query4_eng = "query: What happens if I miss too many classes?"
+query5_eng = "query: How many semesters can I stay on academic probation??"
 
-query1_eng_embedding = model.encode(query1_eng, convert_to_tensor=True, normalize_embeddings=True, show_progress_bar=True)
-query1_rus_embedding = model.encode(query1_rus, convert_to_tensor=True, normalize_embeddings=True, show_progress_bar=True)
+queries = [query1_eng, query2_eng, query3_eng, query4_eng, query5_eng]
 
-scores_eng = embeddings @ query1_eng_embedding
-scores_rus = embeddings @ query1_rus_embedding
+expected_sources = {
+    "001": {
+        "expected_sections": ["3.3.7"],
+        "expected_pages": [5],
+    },
+    "002": {
+        "expected_sections": ["3.20.1"],
+        "expected_pages": [15, 16],
+    },
+    "003": {
+        "expected_sections": ["3.3.12"],
+        "expected_pages": [5],
+    },
+    "004": {
+        "expected_sections": ["3.4.2", "3.4.3", "3.4.4", "3.4.5"],
+        "expected_pages": [6],
+    },
+    "005": {
+        "expected_sections": ["3.16.4", "3.16.5"],
+        "expected_pages": [14],
+    },
+}
 
-print(scores_eng.shape)
-print(scores_rus.shape)
+questions = []
+for query in queries:
+    question = {}
+    question["question_id"] = f"{len(questions) + 1:03d}"
+    question["language"] = "en"
+    question["question"] = query[7:]
+    question["document_id"] = "undergraduate-academic-policies"
+    source = expected_sources[question["question_id"]]
+    question["expected_sections"] = source["expected_sections"]
+    question["expected_pages"] = source["expected_pages"]
+    questions.append(question)
 
-print("for english query")
-top_scores, top_indices = torch.topk(scores_eng, k=5)
 
-for score, index in zip(top_scores.tolist(), top_indices.tolist()):
-    chunk = undergraduate_academic_policies_chunks[index]
-    print(f"\nScore: {score:.4f}")
-    print(f"Pages: {chunk['page_start']}–{chunk['page_end']}")
-    print(chunk["text"])
 
-print("for russian query")
-top_scores, top_indices = torch.topk(scores_rus, k=5)
 
-for score, index in zip(top_scores.tolist(), top_indices.tolist()):
-    chunk = undergraduate_academic_policies_chunks[index]
-    print(f"\nScore: {score:.4f}")
-    print(f"Pages: {chunk['page_start']}–{chunk['page_end']}")
-    print(chunk["text"])
+results = []
+for question in questions:
+    query_embedding = model.encode(query, convert_to_tensor=True, normalize_embeddings=True,
+                                        show_progress_bar=True)
+    score = embeddings @ query_embedding
+    top_scores, top_indices = torch.topk(score, k=5)
+    expected_sections = []
+    expected_pages = []
+    for score, index in zip(top_scores.tolist(), top_indices.tolist()):
+        chunk = undergraduate_academic_policies_chunks[index]
+        expected_sections.append(chunk["text"])
+        expected_pages.append(f"{chunk['page_start']}–{chunk['page_end']}")
+    question["expected_sections"] = expected_sections
+    question["expected_pages"] = expected_pages
+    questions.append(question)
+
+with open("data/eval/questions.json", "w", encoding="utf-8") as json_file:
+    json.dump(questions , json_file, ensure_ascii=False, indent=2)
