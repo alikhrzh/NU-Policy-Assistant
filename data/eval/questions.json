@@ -9,6 +9,9 @@
     ],
     "expected_pages": [
       5
+    ],
+    "relevant_chunk_ids": [
+      "undergraduate-academic-policies-0018"
     ]
   },
   {
@@ -22,6 +25,9 @@
     "expected_pages": [
       15,
       16
+    ],
+    "relevant_chunk_ids": [
+      "undergraduate-academic-policies-0077"
     ]
   },
   {
@@ -34,6 +40,9 @@
     ],
     "expected_pages": [
       5
+    ],
+    "relevant_chunk_ids": [
+      "undergraduate-academic-policies-0022"
     ]
   },
   {
@@ -49,12 +58,17 @@
     ],
     "expected_pages": [
       6
+    ],
+    "relevant_chunk_ids": [
+      "undergraduate-academic-policies-0023",
+      "undergraduate-academic-policies-0024",
+      "undergraduate-academic-policies-0025"
     ]
   },
   {
     "question_id": "005",
     "language": "en",
-    "question": "How many semesters can I stay on academic probation??",
+    "question": "How many semesters can I stay on academic probation?",
     "document_id": "undergraduate-academic-policies",
     "expected_sections": [
       "3.16.4",
@@ -62,6 +76,9 @@
     ],
     "expected_pages": [
       14
+    ],
+    "relevant_chunk_ids": [
+      "undergraduate-academic-policies-0067"
     ]
   }
 ]

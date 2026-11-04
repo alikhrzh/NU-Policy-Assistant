@@ -1,0 +1,92 @@
+[
+  {
+    "question_id": "001",
+    "model": "multilingual-e5-small",
+    "chunk_ids": [
+      "undergraduate-academic-policies-0018",
+      "undergraduate-academic-policies-0067",
+      "undergraduate-academic-policies-0041",
+      "undergraduate-academic-policies-0016",
+      "undergraduate-academic-policies-0078"
+    ],
+    "scores": [
+      0.8582045435905457,
+      0.8531824350357056,
+      0.8490790128707886,
+      0.8486743569374084,
+      0.8385430574417114
+    ]
+  },
+  {
+    "question_id": "002",
+    "model": "multilingual-e5-small",
+    "chunk_ids": [
+      "undergraduate-academic-policies-0077",
+      "undergraduate-academic-policies-0078",
+      "undergraduate-readmission-0003",
+      "undergraduate-readmission-0004",
+      "undergraduate-academic-policies-0049"
+    ],
+    "scores": [
+      0.8630229234695435,
+      0.8550379872322083,
+      0.8401275873184204,
+      0.8387749791145325,
+      0.8387086391448975
+    ]
+  },
+  {
+    "question_id": "003",
+    "model": "multilingual-e5-small",
+    "chunk_ids": [
+      "undergraduate-academic-policies-0022",
+      "leave-dismissal-withdrawal-0046",
+      "undergraduate-academic-policies-0049",
+      "undergraduate-academic-policies-0053",
+      "leave-dismissal-withdrawal-0047"
+    ],
+    "scores": [
+      0.8740290403366089,
+      0.8708509206771851,
+      0.8599869012832642,
+      0.8591901063919067,
+      0.8572200536727905
+    ]
+  },
+  {
+    "question_id": "004",
+    "model": "multilingual-e5-small",
+    "chunk_ids": [
+      "undergraduate-academic-policies-0067",
+      "leave-dismissal-withdrawal-0039",
+      "dormitory-accommodation-rules-0041",
+      "undergraduate-academic-policies-0021",
+      "leave-dismissal-withdrawal-0038"
+    ],
+    "scores": [
+      0.8327682018280029,
+      0.8313555717468262,
+      0.8312014937400818,
+      0.8292308449745178,
+      0.8284749984741211
+    ]
+  },
+  {
+    "question_id": "005",
+    "model": "multilingual-e5-small",
+    "chunk_ids": [
+      "undergraduate-academic-policies-0067",
+      "undergraduate-academic-policies-0065",
+      "undergraduate-academic-policies-0064",
+      "undergraduate-academic-policies-0063",
+      "undergraduate-academic-policies-0068"
+    ],
+    "scores": [
+      0.8909763097763062,
+      0.8896396160125732,
+      0.8745941519737244,
+      0.8719863295555115,
+      0.8713083267211914
+    ]
+  }
+]
