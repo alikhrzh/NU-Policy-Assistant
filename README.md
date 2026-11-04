@@ -1,108 +1,48 @@
 # NU Policy Assistant
 
-A retrieval-augmented generation (RAG) project for answering questions about Nazarbayev University undergraduate policies and campus life, with references to source documents and pages.
+A retrieval-augmented generation (RAG) project for answering questions about Nazarbayev University undergraduate policies and campus life with references to source documents and pages.
 
-**Status: in development.** Document processing and an initial semantic search prototype are implemented. Answer generation and the user interface are planned.
+**Status.** Document processing, semantic retrieval, and an initial evaluation are implemented. Answer generation and the interface are planned.
 
-## Implemented
+## Document Processing
 
-### Document Processing
+- Processed 12 documents covering academic policies, student status, housing, mobility, conduct, and campus services.
+- Recorded source URLs, document dates, access levels, verification status, and extraction notes.
+- Extracted PDF text with pypdf and PyMuPDF and used local Tesseract OCR for the scanned Sports Complex rules.
+- Generated 960 chunks from 231 pages using windows of up to 100 words with a 20-word overlap. Each chunk retains its document ID and source-page range.
 
-- Collected 12 documents covering academic policies, student status, housing, mobility, conduct, and campus services.
-- Created a metadata registry with document dates, access levels, verification status, and extraction notes.
-- Extracted text using pypdf and PyMuPDF.
-- Applied local Tesseract OCR to scanned Sports Complex rules.
-- Added document-specific cleaning rules for page numbers, headers, and footers.
-- Preserved original text alongside cleaned text.
-- Generated 960 chunks from 231 pages using 100-word windows with a 20-word overlap.
-- Verified chunk coverage, unique identifiers, and source-page ranges.
+## Semantic Retrieval
 
-### Semantic Search Prototype
+The prototype uses `intfloat/multilingual-e5-small` through Sentence Transformers. It computes normalized 384-dimensional embeddings and ranks chunks with PyTorch dot products and `torch.topk`. Inference has been tested on Apple Metal (`mps`).
 
-- Loaded `intfloat/multilingual-e5-small` through Sentence Transformers.
-- Checked token lengths for 110 undergraduate policy chunks: the maximum was 186 tokens, within the model’s 512-token limit.
-- Generated normalized 384-dimensional embeddings.
-- Implemented similarity search using PyTorch matrix multiplication and `torch.topk`.
-- Tested English and Russian questions against English source text.
-- Ran inference using the Apple Metal (`mps`) backend.
+An initial token-length check on 110 undergraduate policy chunks found a maximum of 186 tokens within the model’s 512-token limit.
 
-## Preliminary Observations
+## Evaluation
 
-An initial bilingual question retrieved the relevant minimum-credit-load rule at rank 1 in both languages.
+The evaluation set contains **35 questions**, including **30 collected from student chats**. Based on the current local corpus, 8 have a complete answer, 13 have a partial answer, and 14 have no confirmed answer. The last two groups are retained for evaluating partial answers and responses when evidence is missing.
 
-In a separate exploratory check of five English questions, manual inspection found a directly relevant source at rank 1 for four questions. For the attendance question, a relevant source appeared at rank 3.
+The expanded E5-small run searched all 960 chunks and scored the eight questions with a complete answer.
 
-These are preliminary observations on one document, not a formal benchmark. A fixed evaluation set is being prepared.
+| Metric | Result |
+|---|---:|
+| Hit@1 | 4/8 (50%) |
+| Hit@5 | 4/8 (50%) |
 
-## Pipeline
+For the question about reporting broken gym equipment, the model retrieved gym safety rules but missed the clause directing visitors to the Sports Complex administration.
 
-```text
-PDF documents
-    ↓
-Text extraction / OCR
-    ↓
-Page-level JSON
-    ↓
-Document-specific cleaning
-    ↓
-Chunks with source-page ranges
-    ↓
-Multilingual embeddings
-    ↓
-Top-k semantic retrieval
-    ↓
-Answer generation with citations — planned
-```
-
-Chunks can span multiple pages within a document. Each chunk retains its document identifier and starting and ending PDF pages.
-
-## Data Layout
-
-```text
-data/
-├── raw/                 # Local source PDFs
-├── processed/           # Original and cleaned page-level text
-├── chunks/              # Generated chunk files
-├── eval/                # Evaluation questions and results
-├── sources.csv          # Document metadata
-├── sources.json         # Document metadata in JSON
-└── cleaning_rules.json  # Document-specific cleaning settings
-```
-
-Source PDFs and derived text are maintained locally and excluded from version control.
+Two additional JSON files contain the same eight questions in English and Russian, with matching question IDs and relevant chunk IDs. These paired sets are ready for a language comparison. The table above reports the earlier mixed-language run.
 
 ## Technologies
 
-- Python
-- PyTorch
-- Sentence Transformers
-- pypdf
-- PyMuPDF
-- Tesseract OCR
-
-## Current Limitations
-
-- Semantic search has been tested on undergraduate academic policies, not yet the full corpus.
-- Some document versions still require confirmation of their current status.
-- Some headers, extraction artifacts, and OCR errors remain.
-- Fixed-size chunks can split rules, exceptions, lists, and tables.
-- Similarity scores are not probabilities of correctness.
-- Retrieval quality has not yet been measured on a finalized evaluation set.
-- No LLM answer generation or user interface is implemented yet.
+Python, PyTorch, Sentence Transformers, pypdf, PyMuPDF, and Tesseract OCR.
 
 ## Next Steps
 
-- Finalize questions and independently verified supporting sources.
-- Save embeddings with their corresponding chunk identifiers.
-- Extend retrieval to the eligible document corpus.
-- Evaluate English and Russian retrieval separately.
-- Compare multilingual E5-small with an English MiniLM baseline and multilingual E5-base.
-- Add LLM-generated answers with source citations.
-- Build a Streamlit interface.
-- Document installation, dependencies, and reproducible evaluation.
+1. Cache corpus embeddings and run the paired English and Russian evaluations with E5-small.
+2. Compare E5-small, BGE-M3, and Qwen3-Embedding-0.6B on the same corpus and question pairs using Hit@1, Hit@5, and the rank of the first relevant chunk.
+3. Generate answers with source citations and build a simple Streamlit interface.
+4. Document setup and evaluation steps for reproducible runs.
 
-## Source Documents
+## Source Scope
 
-Some source materials have restricted access. Inclusion in the local corpus does not establish permission to redistribute them or use them with external services.
-
-This is an independent learning project, not an official NU service. It is not yet ready to provide authoritative guidance on current university policies.
+Some source materials have restricted access and are used in the local evaluation. Several document versions still require verification. This is an independent learning project, and official university guidance should come from NU

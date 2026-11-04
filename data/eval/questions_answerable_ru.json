@@ -1,0 +1,131 @@
+[
+  {
+    "question_id": "001",
+    "question": "Можно ли взять больше 36 кредитов за один семестр?",
+    "language": "ru",
+    "source": "derived",
+    "group": "answerable",
+    "expected_sections": [
+      "3.3.7"
+    ],
+    "expected_pages": [
+      5
+    ],
+    "relevant_chunk_ids": [
+      "undergraduate-academic-policies-0018"
+    ],
+    "derived_from": "001"
+  },
+  {
+    "question_id": "002",
+    "question": "Если я завалю курс, можно его пересдать?",
+    "language": "ru",
+    "source": "derived",
+    "group": "answerable",
+    "expected_sections": [
+      "3.20.1"
+    ],
+    "expected_pages": [
+      15,
+      16
+    ],
+    "relevant_chunk_ids": [
+      "undergraduate-academic-policies-0077"
+    ],
+    "derived_from": "002"
+  },
+  {
+    "question_id": "003",
+    "question": "Если я откажусь от курса, это повлияет на мой GPA?",
+    "language": "ru",
+    "source": "derived",
+    "group": "answerable",
+    "expected_sections": [
+      "3.3.12"
+    ],
+    "expected_pages": [
+      5
+    ],
+    "relevant_chunk_ids": [
+      "undergraduate-academic-policies-0022"
+    ],
+    "derived_from": "003"
+  },
+  {
+    "question_id": "004",
+    "question": "Что будет, если я пропущу слишком много занятий?",
+    "language": "ru",
+    "source": "derived",
+    "group": "answerable",
+    "expected_sections": [
+      "3.4.2",
+      "3.4.3",
+      "3.4.4",
+      "3.4.5"
+    ],
+    "expected_pages": [
+      6
+    ],
+    "relevant_chunk_ids": [
+      "undergraduate-academic-policies-0023",
+      "undergraduate-academic-policies-0024",
+      "undergraduate-academic-policies-0025"
+    ],
+    "derived_from": "004"
+  },
+  {
+    "question_id": "005",
+    "question": "Сколько семестров можно оставаться на academic probation?",
+    "language": "ru",
+    "source": "derived",
+    "group": "answerable",
+    "expected_sections": [
+      "3.16.4",
+      "3.16.5"
+    ],
+    "expected_pages": [
+      14
+    ],
+    "relevant_chunk_ids": [
+      "undergraduate-academic-policies-0067"
+    ],
+    "derived_from": "005"
+  },
+  {
+    "question_id": "real-010",
+    "question": "Где можно цены на дорм посмотреть?",
+    "language": "ru",
+    "source": "real_student",
+    "group": "answerable",
+    "relevant_chunk_ids": [
+      "dormitory-accommodation-rules-0022"
+    ],
+    "notes": "Section 3.1.10, page 5, identifies MyNU as the place to check approved rates. Local corpus only."
+  },
+  {
+    "question_id": "real-013",
+    "question": "к кому можно обратиться по поводу неисправных тренажеров в джиме?",
+    "language": "ru",
+    "source": "real_student",
+    "group": "answerable",
+    "relevant_chunk_ids": [
+      "sports-complex-rules-0093"
+    ],
+    "notes": "Clause 96 says to report equipment malfunctions to the Sports Complex administration."
+  },
+  {
+    "question_id": "real-022",
+    "question": "Что можно сделать если проф в регистраре неправильную оценку поставил? Это же окончательно? Если окончательно куда можно заяву накатать на него? Подскажите пожалуйста",
+    "language": "ru",
+    "source": "real_student",
+    "group": "answerable",
+    "relevant_chunk_ids": [
+      "undergraduate-academic-policies-0072",
+      "undergraduate-academic-policies-0073",
+      "undergraduate-academic-policies-0074",
+      "undergraduate-academic-policies-0075",
+      "undergraduate-academic-policies-0076"
+    ],
+    "notes": "Incorrect grade entry is grounds for appeal. The procedure depends on whether it is an exam grade or a final course grade."
+  }
+]

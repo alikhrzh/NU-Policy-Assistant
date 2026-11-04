@@ -1,0 +1,129 @@
+[
+  {
+    "question_id": "001",
+    "question": "Can I take more than 36 credits in one semester",
+    "language": "en",
+    "source": "generated",
+    "group": "answerable",
+    "expected_sections": [
+      "3.3.7"
+    ],
+    "expected_pages": [
+      5
+    ],
+    "relevant_chunk_ids": [
+      "undergraduate-academic-policies-0018"
+    ]
+  },
+  {
+    "question_id": "002",
+    "question": "If I fail a course, can I retake it?",
+    "language": "en",
+    "source": "generated",
+    "group": "answerable",
+    "expected_sections": [
+      "3.20.1"
+    ],
+    "expected_pages": [
+      15,
+      16
+    ],
+    "relevant_chunk_ids": [
+      "undergraduate-academic-policies-0077"
+    ]
+  },
+  {
+    "question_id": "003",
+    "question": "Will withdrawing from a course affect my GPA?",
+    "language": "en",
+    "source": "generated",
+    "group": "answerable",
+    "expected_sections": [
+      "3.3.12"
+    ],
+    "expected_pages": [
+      5
+    ],
+    "relevant_chunk_ids": [
+      "undergraduate-academic-policies-0022"
+    ]
+  },
+  {
+    "question_id": "004",
+    "question": "What happens if I miss too many classes?",
+    "language": "en",
+    "source": "generated",
+    "group": "answerable",
+    "expected_sections": [
+      "3.4.2",
+      "3.4.3",
+      "3.4.4",
+      "3.4.5"
+    ],
+    "expected_pages": [
+      6
+    ],
+    "relevant_chunk_ids": [
+      "undergraduate-academic-policies-0023",
+      "undergraduate-academic-policies-0024",
+      "undergraduate-academic-policies-0025"
+    ]
+  },
+  {
+    "question_id": "005",
+    "question": "How many semesters can I stay on academic probation?",
+    "language": "en",
+    "source": "generated",
+    "group": "answerable",
+    "expected_sections": [
+      "3.16.4",
+      "3.16.5"
+    ],
+    "expected_pages": [
+      14
+    ],
+    "relevant_chunk_ids": [
+      "undergraduate-academic-policies-0067"
+    ]
+  },
+  {
+    "question_id": "real-010",
+    "question": "Where can I check how much the dorm costs?",
+    "language": "en",
+    "source": "derived",
+    "group": "answerable",
+    "relevant_chunk_ids": [
+      "dormitory-accommodation-rules-0022"
+    ],
+    "notes": "Section 3.1.10, page 5, identifies MyNU as the place to check approved rates. Local corpus only.",
+    "derived_from": "real-010"
+  },
+  {
+    "question_id": "real-013",
+    "question": "Who should I tell if a machine at the gym is broken?",
+    "language": "en",
+    "source": "derived",
+    "group": "answerable",
+    "relevant_chunk_ids": [
+      "sports-complex-rules-0093"
+    ],
+    "notes": "Clause 96 says to report equipment malfunctions to the Sports Complex administration.",
+    "derived_from": "real-013"
+  },
+  {
+    "question_id": "real-022",
+    "question": "What can I do if my professor entered the wrong grade in Registrar? Is it final? If it is, who can I file a complaint with? Please let me know.",
+    "language": "en",
+    "source": "derived",
+    "group": "answerable",
+    "relevant_chunk_ids": [
+      "undergraduate-academic-policies-0072",
+      "undergraduate-academic-policies-0073",
+      "undergraduate-academic-policies-0074",
+      "undergraduate-academic-policies-0075",
+      "undergraduate-academic-policies-0076"
+    ],
+    "notes": "Incorrect grade entry is grounds for appeal. The procedure depends on whether it is an exam grade or a final course grade.",
+    "derived_from": "real-022"
+  }
+]

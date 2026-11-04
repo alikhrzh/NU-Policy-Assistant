@@ -121,6 +121,61 @@ student_questions = [
         "en", "unanswerable", [],
         "An explicit Summer term maximum was not found. The ordinary semester limit alone does not establish it.",
     ),
+    (
+        "кому писать репорт если мою айдишку забрали и воспользовались?",
+        "ru", "partial", ["campus-access-security-rules-0013"],
+        "The lost-card reporting procedure applies. A specific channel for reporting misuse was not found.",
+    ),
+    (
+        "если экстра плейс одобрили, но в расписании уже 36 кредитов, нужно дропнуть курс чтобы место для него было? типа автоматом зарегается или как? подскажите пожалуйста",
+        "ru", "partial", ["undergraduate-academic-policies-0018", "undergraduate-academic-policies-0019"],
+        "The sources explain the credit limit and overload process. They do not explain extra-place auto-registration.",
+    ),
+    (
+        "Что можно сделать если проф в регистраре неправильную оценку поставил? Это же окончательно? Если окончательно куда можно заяву накатать на него? Подскажите пожалуйста",
+        "ru", "answerable", ["undergraduate-academic-policies-0072", "undergraduate-academic-policies-0073", "undergraduate-academic-policies-0074", "undergraduate-academic-policies-0075", "undergraduate-academic-policies-0076"],
+        "Incorrect grade entry is grounds for appeal. The procedure depends on whether it is an exam grade or a final course grade.",
+    ),
+    (
+        "Как можно запустить на кампус родственников? И что им нужно с собой иметь? Подскажите пожалуйста",
+        "ru", "partial", ["campus-access-security-rules-0014", "campus-access-security-rules-0015"],
+        "Security may ask for identification and access documents. The booking procedure for student relatives was not confirmed.",
+    ),
+    (
+        "Подскажите пожалуйста гостей на кампус пускают без запроса секюрити?",
+        "ru", "partial", ["campus-access-security-rules-0040"],
+        "The security request applies to the visitor category described in the source. A general rule for student guests was not confirmed.",
+    ),
+    (
+        "Можете подсказать, имеет ли проф право ставить F за курс из за низкого attendance-a?",
+        "ru", "partial", ["undergraduate-academic-policies-0025"],
+        "Attendance may affect the grade. The source does not explicitly authorize an F for low attendance.",
+    ),
+    (
+        "подскажите где можно найти документ где написаны правила как составляются силлабусы, какие полиси профы могут делать и тд?",
+        "ru", "partial", ["undergraduate-academic-policies-0025"],
+        "The source states an attendance disclosure requirement. A general syllabus policy was not found.",
+    ),
+    (
+        "подскажите, пожалуйста, а магистранты тоже получают дорожку (state grant)?",
+        "ru", "unanswerable", [],
+        "Clarify whether this means travel reimbursement, an educational grant, or another payment.",
+    ),
+    (
+        "Подскажите, пожалуйста, как заполнять форму overload, если курс будет регистрироваться через extra place и его пока нет в расписании?",
+        "ru", "partial", ["undergraduate-academic-policies-0018", "undergraduate-academic-policies-0019"],
+        "The sources explain where to submit the form and who approves it. Instructions for an extra-place course were not found.",
+    ),
+    (
+        "Подскажите, пожалуйста, у кого можно получить справку об absence of academic and non-academic misconducts?",
+        "ru", "unanswerable", [],
+        "The corpus does not identify who issues this certificate.",
+    ),
+    (
+        "не подскажете как нужно делать retake по курсам? Как и когда заполнять форму?",
+        "ru", "partial", ["undergraduate-academic-policies-0077", "undergraduate-academic-policies-0078"],
+        "The policy describes retake eligibility and grading. The form and submission deadlines were not found.",
+    ),
 ]
 
 needs_review = {"real-007", "real-009", "real-019"}
