@@ -1,9 +1,10 @@
 [
   {
     "question_id": "001",
-    "language": "en",
     "question": "Can I take more than 36 credits in one semester",
-    "document_id": "undergraduate-academic-policies",
+    "language": "en",
+    "source": "generated",
+    "group": "answerable",
     "expected_sections": [
       "3.3.7"
     ],
@@ -16,9 +17,10 @@
   },
   {
     "question_id": "002",
-    "language": "en",
     "question": "If I fail a course, can I retake it?",
-    "document_id": "undergraduate-academic-policies",
+    "language": "en",
+    "source": "generated",
+    "group": "answerable",
     "expected_sections": [
       "3.20.1"
     ],
@@ -32,9 +34,10 @@
   },
   {
     "question_id": "003",
-    "language": "en",
     "question": "Will withdrawing from a course affect my GPA?",
-    "document_id": "undergraduate-academic-policies",
+    "language": "en",
+    "source": "generated",
+    "group": "answerable",
     "expected_sections": [
       "3.3.12"
     ],
@@ -47,9 +50,10 @@
   },
   {
     "question_id": "004",
-    "language": "en",
     "question": "What happens if I miss too many classes?",
-    "document_id": "undergraduate-academic-policies",
+    "language": "en",
+    "source": "generated",
+    "group": "answerable",
     "expected_sections": [
       "3.4.2",
       "3.4.3",
@@ -67,9 +71,10 @@
   },
   {
     "question_id": "005",
-    "language": "en",
     "question": "How many semesters can I stay on academic probation?",
-    "document_id": "undergraduate-academic-policies",
+    "language": "en",
+    "source": "generated",
+    "group": "answerable",
     "expected_sections": [
       "3.16.4",
       "3.16.5"
@@ -80,5 +85,199 @@
     "relevant_chunk_ids": [
       "undergraduate-academic-policies-0067"
     ]
+  },
+  {
+    "question_id": "real-001",
+    "question": "if my adviser is on annual summer leave, then will he able to respond to my student request in registrar only when he comes back?",
+    "language": "en",
+    "source": "real_student",
+    "group": "unanswerable",
+    "relevant_chunk_ids": [],
+    "notes": "The corpus does not describe adviser coverage or response times during annual leave."
+  },
+  {
+    "question_id": "real-002",
+    "question": "What should I do if I didn’t receive EDMS contract signing yet?",
+    "language": "en",
+    "source": "real_student",
+    "group": "unanswerable",
+    "relevant_chunk_ids": [],
+    "notes": "Ask what type of contract it is and when the signing request was expected.",
+    "topic": "contract_signing"
+  },
+  {
+    "question_id": "real-003",
+    "question": "кому обратиться если не получается подписать договор?",
+    "language": "ru",
+    "source": "real_student",
+    "group": "unanswerable",
+    "relevant_chunk_ids": [],
+    "notes": "Ask what type of contract it is and what happens when the student tries to sign.",
+    "topic": "contract_signing"
+  },
+  {
+    "question_id": "real-004",
+    "question": "How can I contact school office to request for excusal from classes? did not get an answer from seds gmail",
+    "language": "en",
+    "source": "real_student",
+    "group": "partial",
+    "relevant_chunk_ids": [
+      "undergraduate-academic-policies-0026"
+    ],
+    "notes": "The instructor approves the absence. A SEDS contact or follow-up channel was not found."
+  },
+  {
+    "question_id": "real-005",
+    "question": "Who can I ask about withdrawal of an internship?",
+    "language": "en",
+    "source": "real_student",
+    "group": "unanswerable",
+    "relevant_chunk_ids": [],
+    "notes": "Ask what type of internship it is and whether it is already registered."
+  },
+  {
+    "question_id": "real-006",
+    "question": "What should I do if I unsubscribe from the seds, all students and campus 22 in gmail",
+    "language": "en",
+    "source": "real_student",
+    "group": "unanswerable",
+    "relevant_chunk_ids": [],
+    "notes": "No instructions for restoring these subscriptions were found."
+  },
+  {
+    "question_id": "real-007",
+    "question": "Where can I get the certificate that i study in the uni? I need it for the visa.",
+    "language": "en",
+    "source": "real_student",
+    "group": "unanswerable",
+    "relevant_chunk_ids": [],
+    "notes": "The mobility guidebook mentions enrollment verification but does not explain where to obtain it for a visa.",
+    "label_status": "needs_review"
+  },
+  {
+    "question_id": "real-008",
+    "question": "is there a site or page to know what could be counted as an excused absence and what documents are needed?",
+    "language": "en",
+    "source": "real_student",
+    "group": "partial",
+    "relevant_chunk_ids": [
+      "undergraduate-academic-policies-0023",
+      "undergraduate-academic-policies-0025",
+      "undergraduate-academic-policies-0026"
+    ],
+    "notes": "The policies describe attendance and approval. A single page listing qualifying reasons and required documents was not found."
+  },
+  {
+    "question_id": "real-009",
+    "question": "where can I get the certificate of illness?",
+    "language": "en",
+    "source": "real_student",
+    "group": "unanswerable",
+    "relevant_chunk_ids": [],
+    "notes": "Ask whether the certificate is for a class absence or for medical leave.",
+    "label_status": "needs_review"
+  },
+  {
+    "question_id": "real-010",
+    "question": "Где можно цены на дорм посмотреть?",
+    "language": "ru",
+    "source": "real_student",
+    "group": "answerable",
+    "relevant_chunk_ids": [
+      "dormitory-accommodation-rules-0022"
+    ],
+    "notes": "Section 3.1.10, page 5, identifies MyNU as the place to check approved rates. Local corpus only."
+  },
+  {
+    "question_id": "real-011",
+    "question": "У нас в университете есть Erasmus программы, или какие то государственные программы по обмену, где все оплачивается полностью?",
+    "language": "ru",
+    "source": "real_student",
+    "group": "partial",
+    "relevant_chunk_ids": [
+      "academic-mobility-guidebook-2026-0017",
+      "student-mobility-policy-0037"
+    ],
+    "notes": "The sources mention Erasmus+ and government-funded programs. Full coverage depends on the specific opportunity."
+  },
+  {
+    "question_id": "real-012",
+    "question": "Придет ли стипендия если карта просрочилась?",
+    "language": "ru",
+    "source": "real_student",
+    "group": "unanswerable",
+    "relevant_chunk_ids": [],
+    "notes": "The corpus does not explain how an expired card affects payment. The bank account and payment details matter."
+  },
+  {
+    "question_id": "real-013",
+    "question": "к кому можно обратиться по поводу неисправных тренажеров в джиме?",
+    "language": "ru",
+    "source": "real_student",
+    "group": "answerable",
+    "relevant_chunk_ids": [
+      "sports-complex-rules-0093"
+    ],
+    "notes": "Clause 96 says to report equipment malfunctions to the Sports Complex administration."
+  },
+  {
+    "question_id": "real-014",
+    "question": "is it possible to get an excused absence if youre going to a conference? if so, how do you do it?",
+    "language": "en",
+    "source": "real_student",
+    "group": "partial",
+    "relevant_chunk_ids": [
+      "undergraduate-academic-policies-0026"
+    ],
+    "notes": "The instructor approves absences. A conference-specific rule and document list were not found."
+  },
+  {
+    "question_id": "real-015",
+    "question": "Where can we complain about dormitory service?",
+    "language": "en",
+    "source": "real_student",
+    "group": "unanswerable",
+    "relevant_chunk_ids": [],
+    "notes": "A general complaint channel was not found. Ask what the service issue concerns."
+  },
+  {
+    "question_id": "real-016",
+    "question": "If I want to change schools should I request it in registrar now?",
+    "language": "en",
+    "source": "real_student",
+    "group": "partial",
+    "relevant_chunk_ids": [
+      "undergraduate-academic-policies-0035",
+      "undergraduate-academic-policies-0036"
+    ],
+    "notes": "The sources describe eligibility and the Transfer between Schools form in SIS. They do not establish whether applications are open now."
+  },
+  {
+    "question_id": "real-017",
+    "question": "Will I be able to leave my belongings in the dormitory after I receive confirmation of my withdrawal? (Summer course)",
+    "language": "en",
+    "source": "real_student",
+    "group": "unanswerable",
+    "relevant_chunk_ids": [],
+    "notes": "Rules about leaving NU or eviction do not establish what happens after withdrawing from a single summer course."
+  },
+  {
+    "question_id": "real-018",
+    "question": "are there any financial obligations if a student drops out of the university after 2nd year?",
+    "language": "en",
+    "source": "real_student",
+    "group": "unanswerable",
+    "relevant_chunk_ids": [],
+    "notes": "Ask which obligations the student means and what funding or contract terms apply."
+  },
+  {
+    "question_id": "real-019",
+    "question": "are there any limitation on the number of credits you can take on summer?",
+    "language": "en",
+    "source": "real_student",
+    "group": "unanswerable",
+    "relevant_chunk_ids": [],
+    "notes": "An explicit Summer term maximum was not found. The ordinary semester limit alone does not establish it.",
+    "label_status": "needs_review"
   }
 ]
