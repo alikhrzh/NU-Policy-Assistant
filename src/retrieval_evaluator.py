@@ -71,18 +71,17 @@ class RetrievalEvaluator:
         }
 
         hit_at_1 = 0
-        hit_at_5 = 0
+        hit_at_k = 0
 
         for question in answerable_questions:
-            rank = results_by_id[
-                question["question_id"]
-            ]["first_relevant_rank"]
+            question_id = question["question_id"]
+            rank = results_by_id[question_id]["first_relevant_rank"]
 
             if rank == 1:
                 hit_at_1 += 1
 
-            if rank is not None and rank <= 5:
-                hit_at_5 += 1
+            if rank is not None and rank <= self.top_k:
+                hit_at_k += 1
 
         total = len(answerable_questions)
 
@@ -90,8 +89,9 @@ class RetrievalEvaluator:
             "results": results,
             "metrics": {
                 "total_questions": total,
+                "top_k": self.top_k,
                 "hit_at_1": hit_at_1 / total if total else None,
-                "hit_at_5": hit_at_5 / total if total else None,
+                f"hit_at_{self.top_k}": hit_at_k / total if total else None,
             },
         }
 

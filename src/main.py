@@ -1,49 +1,63 @@
-import json
+from retrieval_evaluator import RetrievalEvaluator
+print("results for multilingual-e5-small")
+evaluator = RetrievalEvaluator(
+    questions_filename="questions_answerable_en",
+    model_name="multilingual-e5-small",
+    top_k=20,
+)
 
-with open("data/model_evaluation_results/multilingual-e5-small-full-corpus-results.json", "r", encoding="utf-8") as json_file:
-    multilingual_e5_small_full_corpus_results = json.load(json_file)
+report = evaluator.evaluate()
+metrics = report["metrics"]
 
-with open("data/eval/questions.json", "r", encoding="utf-8") as json_file:
-    questions = json.load(json_file)
+print(f"Questions: {metrics['total_questions']}")
+print(f"Hit@1: {metrics['hit_at_1']:.1%}")
+print(f"Hit@{evaluator.top_k}: {metrics[f'hit_at_{evaluator.top_k}']:.1%}")
 
-results_by_id = {
-    result["question_id"]: result
-    for result in multilingual_e5_small_full_corpus_results
-}
+for result in report["results"]:
+    print(
+        result["question_id"],
+        "first relevant rank:",
+        result["first_relevant_rank"],
+    )
+print("results for bge-m3")
+evaluator = RetrievalEvaluator(
+    questions_filename="questions_answerable_en",
+    model_name="bge-m3",
+    top_k=20,
+)
 
-answerable_questions = [
-    question for question in questions
-    if question["group"] == "answerable" and question["relevant_chunk_ids"]
-]
+report = evaluator.evaluate()
+metrics = report["metrics"]
 
-total = len(answerable_questions)
-if total == 0:
-    raise SystemExit("Нет отвечаемых вопросов с размеченными фрагментами.")
+print(f"Questions: {metrics['total_questions']}")
+print(f"Hit@1: {metrics['hit_at_1']:.1%}")
+print(f"Hit@{evaluator.top_k}: {metrics[f'hit_at_{evaluator.top_k}']:.1%}")
 
-hit_at_1 = 0
-hit_at_5 = 0
+for result in report["results"]:
+    print(
+        result["question_id"],
+        "first relevant rank:",
+        result["first_relevant_rank"],
+    )
 
-for question in answerable_questions:
-    question_id = question["question_id"]
+print("results for Qwen3-Embedding-0.6B")
+evaluator = RetrievalEvaluator(
+    questions_filename="questions_answerable_en",
+    model_name="Qwen3-Embedding-0.6B",
+    top_k=20,
+)
 
-    if question_id not in results_by_id:
-        raise SystemExit(
-            f"Нет выдачи для {question_id}. Перезапусти поиск на новом наборе."
-        )
+report = evaluator.evaluate()
+metrics = report["metrics"]
 
-    chunk_ids = results_by_id[question_id]["chunk_ids"]
-    relevant_ids = set(question["relevant_chunk_ids"])
+print(f"Questions: {metrics['total_questions']}")
+print(f"Hit@1: {metrics['hit_at_1']:.1%}")
+print(f"Hit@{evaluator.top_k}: {metrics[f'hit_at_{evaluator.top_k}']:.1%}")
 
-    found_at_1 = bool(relevant_ids.intersection(chunk_ids[:1]))
-    found_at_5 = bool(relevant_ids.intersection(chunk_ids[:5]))
+for result in report["results"]:
+    print(
+        result["question_id"],
+        "first relevant rank:",
+        result["first_relevant_rank"],
+    )
 
-    hit_at_1 += int(found_at_1)
-    hit_at_5 += int(found_at_5)
-
-    if not found_at_1:
-        print(f"{question_id}: промах в топ-1 — {question['question']}")
-    if not found_at_5:
-        print(f"{question_id}: промах и в топ-5")
-
-print(f"Hit@1: {hit_at_1}/{total} ({hit_at_1 / total:.1%})")
-print(f"Hit@5: {hit_at_5}/{total} ({hit_at_5 / total:.1%})")

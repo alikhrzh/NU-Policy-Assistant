@@ -21,16 +21,32 @@ An initial token-length check on 110 undergraduate policy chunks found a maximum
 
 The evaluation set contains **35 questions**, including **30 collected from student chats**. Based on the current local corpus, 8 have a complete answer, 13 have a partial answer, and 14 have no confirmed answer. The last two groups are retained for evaluating partial answers and responses when evidence is missing.
 
-The expanded E5-small run searched all 960 chunks and scored the eight questions with a complete answer.
+The earlier mixed-language E5-small run scored 4/8 for both Hit@1 and Hit@5.
 
-| Metric | Result |
-|---|---:|
-| Hit@1 | 4/8 (50%) |
-| Hit@5 | 4/8 (50%) |
+### Intermediate English Comparison
 
-For the question about reporting broken gym equipment, the model retrieved gym safety rules but missed the clause directing visitors to the Sports Complex administration.
+All three models were evaluated against the same 960 chunks and eight answerable English questions. Five questions were generated in English and three were translated from real Russian student questions. The corresponding Russian question set is prepared for a separate run.
 
-Two additional JSON files contain the same eight questions in English and Russian, with matching question IDs and relevant chunk IDs. These paired sets are ready for a language comparison. The table above reports the earlier mixed-language run.
+| Model | Hit@1 | Hit@5 |
+|---|---:|---:|
+| multilingual-e5-small | 4/8 (50%) | 5/8 (62.5%) |
+| BGE-M3 | 3/8 (37.5%) | 7/8 (87.5%) |
+| Qwen3-Embedding-0.6B | 5/8 (62.5%) | 7/8 (87.5%) |
+
+| Question | E5-small rank | BGE-M3 rank | Qwen3 rank |
+|---|---:|---:|---:|
+| 001 — credit overload | 1 | 1 | 1 |
+| 002 — course retake | 1 | 2 | 2 |
+| 003 — withdrawal and GPA | 1 | 2 | 1 |
+| 004 — missed classes | 6 | 1 | 1 |
+| 005 — academic probation | 1 | 1 | 1 |
+| real-010 — dormitory rates | 29 | 4 | 2 |
+| real-013 — broken gym equipment | 34 | 21 | 34 |
+| real-022 — incorrect grade | 3 | 3 | 1 |
+
+Ranks identify the first manually labeled relevant chunk in the full ranking. These are exploratory results on eight questions. Query formatting and cache provenance, particularly the Qwen instruction, still need verification before treating the comparison as finalized.
+
+The evaluator returns top-k results and calculates Hit@1, Hit@5, and Hit@k for the requested k from full relevance ranks. Changing k reuses cached embeddings.
 
 ## Technologies
 
@@ -38,8 +54,8 @@ Python, PyTorch, Sentence Transformers, pypdf, PyMuPDF, and Tesseract OCR.
 
 ## Next Steps
 
-1. Cache corpus embeddings and run the paired English and Russian evaluations with E5-small.
-2. Compare E5-small, BGE-M3, and Qwen3-Embedding-0.6B on the same corpus and question pairs using Hit@1, Hit@5, and the rank of the first relevant chunk.
+1. Verify cache provenance and model-specific query formatting, then run the paired Russian evaluation.
+2. Expand and review evaluation labels, then compare quality and runtime across the three models.
 3. Generate answers with source citations and build a simple Streamlit interface.
 4. Document setup and evaluation steps for reproducible runs.
 
