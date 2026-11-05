@@ -31,11 +31,14 @@ class RetrievalEvaluator:
             )
         chunks_tensor = torch.tensor([chunk["embedding"] for chunk in chunks], dtype=torch.float32,)
         results = []
-        for questions_embedding in questions_embeddings:
-            question_id  = questions_embedding["question_id"]
+        for question_record in questions_embeddings:
+            question_id = question_record["question_id"]
             question = questions_by_id[question_id]
-            query_tensor = torch.tensor(question_embedding["embedding"],dtype=torch.float32 )
-            similarity = query_tensor @ chunks_tensor
+            query_tensor = torch.tensor(
+                question_record["embedding"],
+                dtype=torch.float32,
+            )
+            similarity = chunks_tensor @ query_tensor
             top_scores, top_indices = torch.topk(similarity, k=self.top_k)
             chunk_ids = [chunks[index]["chunk_id"] for index in top_indices.tolist()]
             scores = []
