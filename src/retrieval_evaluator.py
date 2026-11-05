@@ -1,50 +1,95 @@
 from sentence_transformers import SentenceTransformer
 from pathlib import Path
+from embed import EmbeddingStore
 import json
 import torch
 
 class RetrievalEvaluator:
-    model = SentenceTransformer("intfloat/multilingual-e5-small")
+    def __init__(self, questions_filename="questions",model_name = "multilingual-e5-small", top_k = 5):
+        self.questions_filename = questions_filename
+        self.model_name = model_name
+        self.top_k = top_k
+        self.embedding_store = EmbeddingStore(model_name=model_name, questions_filename=questions_filename)
+    def evaluate(self, ):
 
-    #print(model.max_seq_length)
-    #print(model.get_sentence_embedding_dimension())
-    #print(model.device)
-    all_chunks = []
+        question_embedding = self.embedding_store.get_or_create_question_embeddings()
+        with question_embedding.open("r", encoding="utf-8") as json_file:
+            questions_embeddings = json.load(json_file)
+        chunks_embedding = self.embedding_store.get_or_create_chunk_embeddings()
+        with chunks_embedding.open("r", encoding="utf-8") as json_file:
+            chunks = json.load(json_file)
+        path_questions = Path("data/eval") / f"{self.questions_filename}.json"
+        with path_questions.open("r", encoding="utf-8") as json_file:
+            questions = json.load(json_file)
+        questions_by_id = {
+            question["question_id"]: question
+            for question in questions
+        }
+        if not 1 <= self.top_k <= len(chunks):
+            raise ValueError(
+                f"top_k должен быть от 1 до {len(chunks)}."
+            )
+        chunks_tensor = torch.tensor([chunk["embedding"] for chunk in chunks], dtype=torch.float32,)
+        results = []
+        for questions_embedding in questions_embeddings:
+            question_id  = questions_embedding["question_id"]
+            question = questions_by_id[question_id]
+            query_tensor = torch.tensor(question_embedding["embedding"],dtype=torch.float32 )
+            similarity = query_tensor @ chunks_tensor
+            top_scores, top_indices = torch.topk(similarity, k=self.top_k)
+            chunk_ids = [chunks[index]["chunk_id"] for index in top_indices.tolist()]
+            scores = []
+            relevant_ids = set(question["relevant_chunk_ids"])
+            ranked_indices = torch.argsort(similarity,descending=True,)
+            first_relevant_rank = None
+            for rank, index in enumerate(
+                    ranked_indices.tolist(),
+                    start=1,
+            ):
+                if chunks[index]["chunk_id"] in relevant_ids:
+                    first_relevant_rank = rank
+                    break
+            results.append({
+                "question_id": question_id,
+                "chunk_ids": chunk_ids,
+                "scores": top_scores.tolist(),
+                "first_relevant_rank": first_relevant_rank,
+            })
 
-    for path in sorted(Path("data/chunks").glob("*-chunks.json")):
-        with path.open(encoding="utf-8") as json_file:
-            all_chunks.extend(json.load(json_file))
+        answerable_questions = [
+            question for question in questions
+            if question["group"] == "answerable"
+               and question["relevant_chunk_ids"]
+        ]
+
+        results_by_id = {
+            result["question_id"]: result
+            for result in results
+        }
+
+        hit_at_1 = 0
+        hit_at_5 = 0
+
+        for question in answerable_questions:
+            rank = results_by_id[
+                question["question_id"]
+            ]["first_relevant_rank"]
+
+            if rank == 1:
+                hit_at_1 += 1
+
+            if rank is not None and rank <= 5:
+                hit_at_5 += 1
+
+        total = len(answerable_questions)
+
+        return {
+            "results": results,
+            "metrics": {
+                "total_questions": total,
+                "hit_at_1": hit_at_1 / total if total else None,
+                "hit_at_5": hit_at_5 / total if total else None,
+            },
+        }
 
 
-    passages = []
-    for chunk in all_chunks:
-        passage = "passage: " + chunk["text"]
-        passages.append(passage)
-
-    embeddings = model.encode(passages, convert_to_tensor=True, normalize_embeddings=True, show_progress_bar=True)
-
-    with open("data/eval/questions.json", "r", encoding="utf-8") as json_file:
-        questions = json.load(json_file)
-
-    results = []
-
-    for question in questions:
-        result = {}
-        result["question_id"] = question["question_id"]
-        result["model"] = "multilingual-e5-small"
-        query = "query: " + question["question"]
-        query_embedding = model.encode(query, convert_to_tensor=True, normalize_embeddings=True)
-        similarity = embeddings @ query_embedding
-        top_scores, top_indices = torch.topk(similarity, k=5)
-        find_chunks = []
-        scores = []
-        for score, index in zip(top_scores.tolist(), top_indices.tolist()):
-            chunk = all_chunks[index]
-            find_chunks.append(chunk["chunk_id"])
-            scores.append(score)
-        result["chunk_ids"] = find_chunks
-        result["scores"] = scores
-        results.append(result)
-
-    with open("data/model_evaluation_results/multilingual-e5-small-full-corpus-results.json", "w", encoding="utf-8") as json_file:
-        json.dump(results , json_file, ensure_ascii=False, indent=2)
