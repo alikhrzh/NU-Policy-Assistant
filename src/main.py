@@ -1,63 +1,59 @@
 from retrieval_evaluator import RetrievalEvaluator
-print("results for multilingual-e5-small")
-evaluator = RetrievalEvaluator(
-    questions_filename="questions_answerable_en",
-    model_name="multilingual-e5-small",
-    top_k=20,
-)
 
-report = evaluator.evaluate()
-metrics = report["metrics"]
+models = [
+    "multilingual-e5-small",
+    "bge-m3",
+    "Qwen3-Embedding-0.6B",
+]
 
-print(f"Questions: {metrics['total_questions']}")
-print(f"Hit@1: {metrics['hit_at_1']:.1%}")
-print(f"Hit@{evaluator.top_k}: {metrics[f'hit_at_{evaluator.top_k}']:.1%}")
+question_sets = {
+    "EN": "questions_answerable_en",
+    "RU": "questions_answerable_ru",
+}
 
-for result in report["results"]:
-    print(
-        result["question_id"],
-        "first relevant rank:",
-        result["first_relevant_rank"],
-    )
-print("results for bge-m3")
-evaluator = RetrievalEvaluator(
-    questions_filename="questions_answerable_en",
-    model_name="bge-m3",
-    top_k=20,
-)
+top_k = 20
+reports = {}
 
-report = evaluator.evaluate()
-metrics = report["metrics"]
+for model_name in models:
+    reports[model_name] = {}
 
-print(f"Questions: {metrics['total_questions']}")
-print(f"Hit@1: {metrics['hit_at_1']:.1%}")
-print(f"Hit@{evaluator.top_k}: {metrics[f'hit_at_{evaluator.top_k}']:.1%}")
+    for language, filename in question_sets.items():
+        evaluator = RetrievalEvaluator(
+            questions_filename=filename,
+            model_name=model_name,
+            top_k=top_k,
+        )
 
-for result in report["results"]:
-    print(
-        result["question_id"],
-        "first relevant rank:",
-        result["first_relevant_rank"],
-    )
+        report = evaluator.evaluate()
+        reports[model_name][language] = report
 
-print("results for Qwen3-Embedding-0.6B")
-evaluator = RetrievalEvaluator(
-    questions_filename="questions_answerable_en",
-    model_name="Qwen3-Embedding-0.6B",
-    top_k=20,
-)
+        print(f"\n{model_name} | {language}")
 
-report = evaluator.evaluate()
-metrics = report["metrics"]
+        metrics = report["metrics"]
+        print(f"Questions: {metrics['total_questions']}")
 
-print(f"Questions: {metrics['total_questions']}")
-print(f"Hit@1: {metrics['hit_at_1']:.1%}")
-print(f"Hit@{evaluator.top_k}: {metrics[f'hit_at_{evaluator.top_k}']:.1%}")
+        for k in (1, 5, 20):
+            hits = sum(
+                result["first_relevant_rank"] is not None
+                and result["first_relevant_rank"] <= k
+                for result in report["results"]
+            )
+            print(
+                f"Hit@{k}: {hits}/{metrics['total_questions']} "
+                f"({hits / metrics['total_questions']:.1%})"
+            )
 
-for result in report["results"]:
-    print(
-        result["question_id"],
-        "first relevant rank:",
-        result["first_relevant_rank"],
-    )
+    print("\nRanks by question")
+    english_results = {
+        result["question_id"]: result
+        for result in reports[model_name]["EN"]["results"]
+    }
+    russian_results = {
+        result["question_id"]: result
+        for result in reports[model_name]["RU"]["results"]
+    }
 
+    for question_id, english_result in english_results.items():
+        english_rank = english_result["first_relevant_rank"]
+        russian_rank = russian_results[question_id]["first_relevant_rank"]
+        print(f"{question_id}: EN={english_rank}, RU={russian_rank}")
