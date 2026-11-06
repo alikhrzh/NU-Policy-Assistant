@@ -4,10 +4,9 @@ NU Policy Assistant is a RAG prototype for Nazarbayev University policies. It se
 
 ## Key findings
 
-- On eight answerable questions, BGE-M3 and Qwen3 ranked a passage from the correct document first in 7/8 and 8/8 cases. The labeled passage came first in 3/8 and 5/8 cases.
-- BGE-M3 had higher Recall@20 on those questions (95% vs. 82.5%). Qwen3 had higher Hit@1 (5/8 vs. 3/8).
-- One question changes a hit rate by 12.5 percentage points in this set. The comparison is preliminary.
-- Fixed-length chunks can split policy clauses or combine unrelated sections. On the broken gym equipment question, both models ranked other passages from the right document above the reporting instruction.
+- On 18 test pairs, Qwen3 had the highest Hit@1 at 10/18 in each language.
+- BGE-M3 found at least one labeled chunk in the top 20 for all 18 test questions in each language. The test set includes one question that overlaps with a dev question about course overload.
+- Fixed-length chunks can split policy clauses or combine unrelated sections. In the diagnostic baseline, both BGE-M3 and Qwen3 found the Sports Complex rules but ranked other passages above the instruction for reporting broken equipment.
 
 ## Pipeline
 
@@ -30,7 +29,7 @@ python src/main.py
 ```
 
 - Put prepared corpus files in `data/chunks/*-chunks.json` and the paired question sets in `data/eval/questions_answerable_en.json` and `data/eval/questions_answerable_ru.json`. The repository tracks these inputs for the baseline.
-- The script compares three models and prints Hit@1, Hit@5, Hit@20, and the first relevant rank for each question. It reuses matching embedding files in `data/embeddings/`. On a cache miss, the model may need to download weights from Hugging Face. Regenerate the affected cache if you change the input text or query formatting.
+- The script compares three models and reports Hit@1, Hit@5, Hit@20, and the first relevant rank for the 18 test pairs. The eight development IDs are defined in `src/main.py`. It reuses matching embedding files in `data/embeddings/`. On a cache miss, the model may need to download weights from Hugging Face. Regenerate the affected question cache when you add or edit questions or change query formatting.
 - To prepare the corpus from scratch, put source PDFs in `data/raw/` and record them in `data/sources.json`. PDF extraction uses `pypdf` and `pymupdf`. Scanned pages also need local Tesseract OCR. The preparation scripts write page-level JSON to `data/processed/`, then `src/chunk.py` builds the search inputs.
 
 ## Document Processing
@@ -48,11 +47,11 @@ An initial token-length check on 110 undergraduate policy chunks found a maximum
 
 ## Evaluation
 
-The evaluation set contains **35 questions**, including **30 collected from student chats**. Based on the current local corpus, 8 have a complete answer, 13 have a partial answer, and 14 have no confirmed answer. The last two groups are retained for evaluating partial answers and responses when evidence is missing.
+The evaluation set contains **65 questions**, including **60 real student questions**. The current corpus supports a complete answer for 26, a partial answer for 22, and no confirmed answer for 17. The 26 answerable questions have paired English and Russian versions with shared IDs and relevance labels. The split uses eight pairs for development and 18 for testing.
 
 The earlier mixed-language E5-small run scored 4/8 for both Hit@1 and Hit@5.
 
-### Preliminary English and Russian Comparison
+### Development set
 
 Each model searched the same 960 chunks using eight paired questions. Both languages use the same relevance labels. Five questions originated in English and three came from Russian student chats.
 
@@ -79,18 +78,7 @@ These results are preliminary. Each question accounts for 12.5 percentage points
 
 The evaluator uses cached embeddings, returns the requested top-k results, and records the first relevant rank across the corpus. The comparison script reports Hit@1, Hit@5, and Hit@20 from those ranks.
 
-### Retrieval Diagnostic Baseline
-
-BGE-M3 and Qwen3 searched the same 960 chunks using all 35 original questions. Retrieval metrics cover the 8 answerable and 13 partial questions separately. The 14 unanswerable questions are retained for later testing of how the assistant responds when evidence is missing.
-
-| Group | Model | Hit@1 | Hit@5 | Hit@20 | MRR | Recall@20 | Recall@50 |
-|---|---|---:|---:|---:|---:|---:|---:|
-| Answerable | BGE-M3 | 3/8 | 7/8 | 8/8 | 0.590 | 95.0% | 100% |
-| Answerable | Qwen3 | 5/8 | 6/8 | 7/8 | 0.710 | 82.5% | 85.0% |
-| Partial | BGE-M3 | 5/13 | 8/13 | 10/13 | 0.501 | 71.8% | 83.3% |
-| Partial | Qwen3 | 5/13 | 7/13 | 10/13 | 0.472 | 64.1% | 85.9% |
-
-## Retrieval evaluation on the test set
+### Test set
 
 The test set contains 18 questions, each available in English and Russian. Both versions share the same question ID and relevance labels. The 8 development pairs are reported separately. All three models searched the same corpus of 960 chunks.
 
@@ -103,6 +91,17 @@ The test set contains 18 questions, each available in English and Russian. Both 
 Qwen3 achieved the highest Hit@1 in both languages. BGE-M3 retrieved at least one relevant chunk within the top 20 for every test question in both languages. The two Russian queries Qwen3 missed at that cutoff concerned academic leave. Their first relevant chunks ranked 143rd and 22nd with Qwen3, compared with 7th and 14th with BGE-M3.
 
 Each question accounts for 5.6 percentage points per language. The test question about the course overload form (`real-060`) overlaps with a development question about exceeding 36 credits (`001`). Hit@k measures whether at least one labeled chunk appears in the top *k*. Questions that require evidence from multiple chunks may still have incomplete evidence even when counted as hits.
+
+### Retrieval Diagnostic Baseline
+
+BGE-M3 and Qwen3 searched the same 960 chunks using all 35 original questions. Retrieval metrics cover the 8 answerable and 13 partial questions separately. The 14 unanswerable questions are retained for later testing of how the assistant responds when evidence is missing.
+
+| Group | Model | Hit@1 | Hit@5 | Hit@20 | MRR | Recall@20 | Recall@50 |
+|---|---|---:|---:|---:|---:|---:|---:|
+| Answerable | BGE-M3 | 3/8 | 7/8 | 8/8 | 0.590 | 95.0% | 100% |
+| Answerable | Qwen3 | 5/8 | 6/8 | 7/8 | 0.710 | 82.5% | 85.0% |
+| Partial | BGE-M3 | 5/13 | 8/13 | 10/13 | 0.501 | 71.8% | 83.3% |
+| Partial | Qwen3 | 5/13 | 7/13 | 10/13 | 0.472 | 64.1% | 85.9% |
 
 Recall is averaged across questions and measures coverage of labeled chunks. For partial questions, the labels support only part of the requested answer. Per-question results and language breakdowns are stored in [retrieval-diagnostics.json](data/model_evaluation_results/retrieval-diagnostics.json).
 
@@ -121,10 +120,9 @@ Python, PyTorch, Sentence Transformers, pypdf, PyMuPDF, and Tesseract OCR.
 
 ## Next Steps
 
-1. Verify cache provenance and model-specific query formatting, then rerun affected comparisons.
-2. Expand and review evaluation labels, then compare quality and runtime across the three models.
-3. Generate answers with source citations and build a simple Streamlit interface.
-4. Document setup and evaluation steps for reproducible runs.
+1. Compare reranking against the retrieval baseline on the dev set. Track Hit@k and coverage of labeled chunks.
+2. Generate answers with document and page citations. Check partial and unanswerable cases separately.
+3. Add a small interface and a reproducible demo.
 
 ## Source Scope
 
