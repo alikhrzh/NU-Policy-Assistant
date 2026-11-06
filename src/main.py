@@ -1,5 +1,6 @@
 from retrieval_evaluator import RetrievalEvaluator
 
+
 models = [
     "multilingual-e5-small",
     "bge-m3",
@@ -11,11 +12,21 @@ question_sets = {
     "RU": "questions_answerable_ru",
 }
 
+dev_ids = (
+    "001",
+    "002",
+    "003",
+    "004",
+    "005",
+    "real-010",
+    "real-013",
+    "real-022",
+)
+
 top_k = 20
-reports = {}
 
 for model_name in models:
-    reports[model_name] = {}
+    test_results_by_language = {}
 
     for language, filename in question_sets.items():
         evaluator = RetrievalEvaluator(
@@ -23,37 +34,48 @@ for model_name in models:
             model_name=model_name,
             top_k=top_k,
         )
-
         report = evaluator.evaluate()
-        reports[model_name][language] = report
 
-        print(f"\n{model_name} | {language}")
+        results_by_id = {
+            result["question_id"]: result
+            for result in report["results"]
+        }
 
-        metrics = report["metrics"]
-        print(f"Questions: {metrics['total_questions']}")
+        missing_ids = set(dev_ids) - results_by_id.keys()
+        if missing_ids:
+            raise ValueError(f"{language}: missing dev IDs {sorted(missing_ids)}")
+
+        test_results = [
+            result
+            for question_id, result in results_by_id.items()
+            if question_id not in dev_ids
+        ]
+        test_results_by_language[language] = test_results
+
+        total = len(test_results)
+        if total == 0:
+            raise ValueError(f"{language}: test set is empty")
+
+        print(f"\n{model_name} | {language} | TEST")
+        print(f"Questions: {total}")
 
         for k in (1, 5, 20):
             hits = sum(
                 result["first_relevant_rank"] is not None
                 and result["first_relevant_rank"] <= k
-                for result in report["results"]
+                for result in test_results
             )
-            print(
-                f"Hit@{k}: {hits}/{metrics['total_questions']} "
-                f"({hits / metrics['total_questions']:.1%})"
-            )
+            print(f"Hit@{k}: {hits}/{total} ({hits / total:.1%})")
 
-    print("\nRanks by question")
-    english_results = {
-        result["question_id"]: result
-        for result in reports[model_name]["EN"]["results"]
-    }
-    russian_results = {
-        result["question_id"]: result
-        for result in reports[model_name]["RU"]["results"]
+    print("\nTEST ranks by question")
+    ru_ranks = {
+        result["question_id"]: result["first_relevant_rank"]
+        for result in test_results_by_language["RU"]
     }
 
-    for question_id, english_result in english_results.items():
-        english_rank = english_result["first_relevant_rank"]
-        russian_rank = russian_results[question_id]["first_relevant_rank"]
-        print(f"{question_id}: EN={english_rank}, RU={russian_rank}")
+    for result in test_results_by_language["EN"]:
+        question_id = result["question_id"]
+        print(
+            f"{question_id}: EN={result['first_relevant_rank']}, "
+            f"RU={ru_ranks[question_id]}"
+        )

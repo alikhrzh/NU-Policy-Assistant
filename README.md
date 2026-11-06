@@ -90,6 +90,20 @@ BGE-M3 and Qwen3 searched the same 960 chunks using all 35 original questions. R
 | Partial | BGE-M3 | 5/13 | 8/13 | 10/13 | 0.501 | 71.8% | 83.3% |
 | Partial | Qwen3 | 5/13 | 7/13 | 10/13 | 0.472 | 64.1% | 85.9% |
 
+## Retrieval evaluation on the test set
+
+The test set contains 18 questions, each available in English and Russian. Both versions share the same question ID and relevance labels. The 8 development pairs are reported separately. All three models searched the same corpus of 960 chunks.
+
+| Model | EN Hit@1 | EN Hit@5 | EN Hit@20 | RU Hit@1 | RU Hit@5 | RU Hit@20 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| multilingual-e5-small | 7/18 | 14/18 | 16/18 | 4/18 | 12/18 | 14/18 |
+| BGE-M3 | 9/18 | **18/18** | **18/18** | 8/18 | **14/18** | **18/18** |
+| Qwen3-Embedding-0.6B | **10/18** | 17/18 | **18/18** | **10/18** | **14/18** | 16/18 |
+
+Qwen3 achieved the highest Hit@1 in both languages. BGE-M3 retrieved at least one relevant chunk within the top 20 for every test question in both languages. The two Russian queries Qwen3 missed at that cutoff concerned academic leave. Their first relevant chunks ranked 143rd and 22nd with Qwen3, compared with 7th and 14th with BGE-M3.
+
+Each question accounts for 5.6 percentage points per language. The test question about the course overload form (`real-060`) overlaps with a development question about exceeding 36 credits (`001`). Hit@k measures whether at least one labeled chunk appears in the top *k*. Questions that require evidence from multiple chunks may still have incomplete evidence even when counted as hits.
+
 Recall is averaged across questions and measures coverage of labeled chunks. For partial questions, the labels support only part of the requested answer. Per-question results and language breakdowns are stored in [retrieval-diagnostics.json](data/model_evaluation_results/retrieval-diagnostics.json).
 
 **Observed failure modes**
