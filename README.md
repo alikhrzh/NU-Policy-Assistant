@@ -1,8 +1,37 @@
 # NU Policy Assistant
 
-A retrieval-augmented generation (RAG) project for answering questions about Nazarbayev University undergraduate policies and campus life with references to source documents and pages.
+NU Policy Assistant is a RAG prototype for Nazarbayev University policies. It searches 960 passages from 12 documents, tracks their source pages, and evaluates retrieval in English and Russian. Answer generation and a user interface are planned.
 
-**Status.** Document processing, semantic retrieval, and an initial evaluation are implemented. Answer generation and the interface are planned.
+## Key findings
+
+- On eight answerable questions, BGE-M3 and Qwen3 ranked a passage from the correct document first in 7/8 and 8/8 cases. The labeled passage came first in 3/8 and 5/8 cases.
+- BGE-M3 had higher Recall@20 on those questions (95% vs. 82.5%). Qwen3 had higher Hit@1 (5/8 vs. 3/8).
+- One question changes a hit rate by 12.5 percentage points in this set. The comparison is preliminary.
+- Fixed-length chunks can split policy clauses or combine unrelated sections. On the broken gym equipment question, both models ranked other passages from the right document above the reporting instruction.
+
+## Pipeline
+
+```text
+PDFs → extraction and cleaning → chunks → cached embeddings → ranked search → evaluation
+```
+
+- **Hit@k** is the share of questions with at least one labeled relevant chunk in the top k.
+- **MRR** is the mean reciprocal rank of the first labeled relevant chunk. A missing match contributes zero.
+- **Recall@k** is the share of labeled relevant chunks retrieved in the top k, averaged across questions.
+
+## Quick start
+
+Run from the repository root with Python 3.10 or newer and a compatible PyTorch installation.
+
+```bash
+python -m pip install torch sentence-transformers
+mkdir -p data/embeddings/questions data/embeddings/chunks
+python src/main.py
+```
+
+- Put prepared corpus files in `data/chunks/*-chunks.json` and the paired question sets in `data/eval/questions_answerable_en.json` and `data/eval/questions_answerable_ru.json`. The repository tracks these inputs for the baseline.
+- The script compares three models and prints Hit@1, Hit@5, Hit@20, and the first relevant rank for each question. It reuses matching embedding files in `data/embeddings/`. On a cache miss, the model may need to download weights from Hugging Face. Regenerate the affected cache if you change the input text or query formatting.
+- To prepare the corpus from scratch, put source PDFs in `data/raw/` and record them in `data/sources.json`. PDF extraction uses `pypdf` and `pymupdf`. Scanned pages also need local Tesseract OCR. The preparation scripts write page-level JSON to `data/processed/`, then `src/chunk.py` builds the search inputs.
 
 ## Document Processing
 
@@ -49,6 +78,28 @@ Ranks identify the first labeled relevant chunk. BGE-M3 achieved 7/8 Hit@5 in bo
 These results are preliminary. Each question accounts for 12.5 percentage points. The Qwen query instruction and embedding cache provenance still need verification.
 
 The evaluator uses cached embeddings, returns the requested top-k results, and records the first relevant rank across the corpus. The comparison script reports Hit@1, Hit@5, and Hit@20 from those ranks.
+
+### Retrieval Diagnostic Baseline
+
+BGE-M3 and Qwen3 searched the same 960 chunks using all 35 original questions. Retrieval metrics cover the 8 answerable and 13 partial questions separately. The 14 unanswerable questions are retained for later testing of how the assistant responds when evidence is missing.
+
+| Group | Model | Hit@1 | Hit@5 | Hit@20 | MRR | Recall@20 | Recall@50 |
+|---|---|---:|---:|---:|---:|---:|---:|
+| Answerable | BGE-M3 | 3/8 | 7/8 | 8/8 | 0.590 | 95.0% | 100% |
+| Answerable | Qwen3 | 5/8 | 6/8 | 7/8 | 0.710 | 82.5% | 85.0% |
+| Partial | BGE-M3 | 5/13 | 8/13 | 10/13 | 0.501 | 71.8% | 83.3% |
+| Partial | Qwen3 | 5/13 | 7/13 | 10/13 | 0.472 | 64.1% | 85.9% |
+
+Recall is averaged across questions and measures coverage of labeled chunks. For partial questions, the labels support only part of the requested answer. Per-question results and language breakdowns are stored in [retrieval-diagnostics.json](data/model_evaluation_results/retrieval-diagnostics.json).
+
+**Observed failure modes**
+
+- **Wrong passage within the right document.** On answerable questions, BGE-M3 and Qwen3 ranked a chunk from the correct document first in 7/8 and 8/8 cases. The relevant chunk was first in 3/8 and 5/8 cases. For `real-013`, both found the Sports Complex rules but ranked the reporting instruction 18th and 64th.
+- **Overlap between topics.** For `real-023`, both models ranked housing and mobility passages above campus access rules. For `real-008`, academic leave and missed assessments competed with attendance rules.
+- **Colloquial mixed-language queries.** For `real-021`, BGE-M3 ranked the credit-load rule first, while Qwen3 ranked it 20th and returned dormitory passages first. Whether wording contributed to the miss remains a hypothesis.
+- **Labels that need review.** The labeled passage for `real-026` describes attendance disclosures. It gives limited support for a question about where to find general syllabus rules.
+
+Keep this run as the baseline. Test splitting Sports Complex clause 96 into its own chunk and normalizing the wording of `real-021` in separate experiments. Review the label for `real-026` before comparing updated metrics.
 
 ## Technologies
 
