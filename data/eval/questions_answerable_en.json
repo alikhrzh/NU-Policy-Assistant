@@ -125,5 +125,241 @@
     ],
     "notes": "Incorrect grade entry is grounds for appeal. The procedure depends on whether it is an exam grade or a final course grade.",
     "derived_from": "real-022"
+  },
+  {
+    "question_id": "real-035",
+    "question": "Can I register 30+ credits if I am on probation?",
+    "language": "en",
+    "source": "real_student",
+    "group": "answerable",
+    "relevant_chunk_ids": [
+      "undergraduate-academic-policies-0017"
+    ],
+    "notes": "Section 3.3.6 sets a maximum of 30 ECTS during academic probation. In some cases the limit may be reduced to 24 ECTS."
+  },
+  {
+    "question_id": "real-041",
+    "question": "What does probation mean here? Sorry, I'm a freshman",
+    "language": "en",
+    "source": "real_student",
+    "group": "answerable",
+    "relevant_chunk_ids": [
+      "undergraduate-academic-policies-0063",
+      "undergraduate-academic-policies-0064",
+      "undergraduate-academic-policies-0065"
+    ],
+    "notes": "Sections 3.16.2 and 3.16.4 define good academic standing and explain when students are placed on academic probation."
+  },
+  {
+    "question_id": "real-042",
+    "question": "if a student receives two probations in a row, is he/she obligatory expelled from the university?",
+    "language": "en",
+    "source": "real_student",
+    "group": "answerable",
+    "relevant_chunk_ids": [
+      "undergraduate-academic-policies-0066",
+      "undergraduate-academic-policies-0067"
+    ],
+    "notes": "Sections 3.16.4 and 3.16.5 cover dismissal after extended probation and the exceptional approval of an additional semester of study. Labeled against the current corpus edition."
+  },
+  {
+    "question_id": "real-046",
+    "question": "What is the GPA for Dean's list and higher stipend?",
+    "language": "en",
+    "source": "real_student",
+    "group": "answerable",
+    "relevant_chunk_ids": [
+      "undergraduate-academic-policies-0057",
+      "stipend-support-policy-0020"
+    ],
+    "notes": "Dean's List requires a GPA of 3.75. Bachelor's students with a semester GPA of at least 3.67 receive a 15% stipend increase. Both chunks are needed for the full answer."
+  },
+  {
+    "question_id": "real-047",
+    "question": "Retake is possible only in case of fail?",
+    "language": "en",
+    "source": "real_student",
+    "group": "answerable",
+    "relevant_chunk_ids": [
+      "undergraduate-academic-policies-0077"
+    ],
+    "notes": "Section 3.20.1 allows a retake when the grade prevents academic progress. Retakes solely to increase GPA or CGPA are prohibited."
+  },
+  {
+    "question_id": "real-048",
+    "question": "Do you go on academic probation if your GPA drops below 2.0?",
+    "language": "en",
+    "source": "derived",
+    "group": "answerable",
+    "relevant_chunk_ids": [
+      "undergraduate-academic-policies-0063",
+      "undergraduate-academic-policies-0064"
+    ],
+    "notes": "At the end of fall and spring semesters, both GPA and CGPA must be at least 2.00 for Good Academic Standing. Failing either condition leads to academic probation.",
+    "derived_from": "real-048"
+  },
+  {
+    "question_id": "real-049",
+    "question": "How do we calculate our semester GPA if we retake a course?",
+    "language": "en",
+    "source": "derived",
+    "group": "answerable",
+    "relevant_chunk_ids": [
+      "undergraduate-academic-policies-0078"
+    ],
+    "notes": "Section 3.20.2 counts each attempt in its respective semester GPA. Only the last retake counts toward the final CGPA.",
+    "derived_from": "real-049"
+  },
+  {
+    "question_id": "real-050",
+    "question": "Can I take a leave of absence in the second semester of my first year?",
+    "language": "en",
+    "source": "derived",
+    "group": "answerable",
+    "relevant_chunk_ids": [
+      "leave-dismissal-withdrawal-0015",
+      "leave-dismissal-withdrawal-0016",
+      "leave-dismissal-withdrawal-0026"
+    ],
+    "notes": "First-year undergraduates are ineligible under the Other category. Medical and Immediate Family Member leave remain possible subject to the general eligibility rules and application windows.",
+    "derived_from": "real-050"
+  },
+  {
+    "question_id": "real-051",
+    "question": "How do I take a leave of absence?",
+    "language": "en",
+    "source": "derived",
+    "group": "answerable",
+    "relevant_chunk_ids": [
+      "leave-dismissal-withdrawal-0014",
+      "leave-dismissal-withdrawal-0015",
+      "leave-dismissal-withdrawal-0018",
+      "leave-dismissal-withdrawal-0055",
+      "leave-dismissal-withdrawal-0056"
+    ],
+    "notes": "Select the leave category, submit the application and required documents through SIS within the applicable window, and wait for the decision to be registered.",
+    "derived_from": "real-051"
+  },
+  {
+    "question_id": "real-052",
+    "question": "Where can I find the underload form?",
+    "language": "en",
+    "source": "derived",
+    "group": "answerable",
+    "relevant_chunk_ids": [
+      "undergraduate-academic-policies-0016",
+      "undergraduate-academic-policies-0017"
+    ],
+    "notes": "Section 3.3.5 says the Course Underload Form is available in SIS.",
+    "derived_from": "real-052"
+  },
+  {
+    "question_id": "real-053",
+    "question": "When is the deadline to declare my major?",
+    "language": "en",
+    "source": "derived",
+    "group": "answerable",
+    "relevant_chunk_ids": [
+      "undergraduate-academic-policies-0027",
+      "undergraduate-academic-policies-0028"
+    ],
+    "notes": "Section 3.5.1 requires declaration of the primary major by the end of the first year and acceptance into it by the end of the second year.",
+    "derived_from": "real-053"
+  },
+  {
+    "question_id": "real-054",
+    "question": "What's the deadline to declare a minor?",
+    "language": "en",
+    "source": "derived",
+    "group": "answerable",
+    "relevant_chunk_ids": [
+      "undergraduate-academic-policies-0030"
+    ],
+    "notes": "Section 3.6.1 sets the deadline at the end of the first semester of the student's final year, subject to School approval.",
+    "derived_from": "real-054"
+  },
+  {
+    "question_id": "real-055",
+    "question": "Does 'no incomplete grades in any courses' mean no fails or withdrawals?",
+    "language": "en",
+    "source": "derived",
+    "group": "answerable",
+    "relevant_chunk_ids": [
+      "undergraduate-academic-policies-0050",
+      "undergraduate-academic-policies-0054",
+      "undergraduate-academic-policies-0056"
+    ],
+    "notes": "Incomplete is a temporary I grade. F and W are separate grades. An unresolved I may revert to F under the conditions in section 3.11.4.",
+    "derived_from": "real-055"
+  },
+  {
+    "question_id": "real-056",
+    "question": "Will an Incomplete grade cost me my stipend even if I have a serious reason?",
+    "language": "en",
+    "source": "derived",
+    "group": "answerable",
+    "relevant_chunk_ids": [
+      "stipend-support-policy-0013",
+      "stipend-support-policy-0014",
+      "stipend-support-policy-0015"
+    ],
+    "notes": "Under clause 19, eligible bachelor's and master's students with a valid documented reason can receive the stipend after completing the course requirements, with payment covering the eligible period from the start of the semester.",
+    "derived_from": "real-056"
+  },
+  {
+    "question_id": "real-057",
+    "question": "Will I still get my stipend if I take an Incomplete in a summer course?",
+    "language": "en",
+    "source": "derived",
+    "group": "answerable",
+    "relevant_chunk_ids": [
+      "stipend-support-policy-0014",
+      "stipend-support-policy-0015",
+      "stipend-support-policy-0017",
+      "stipend-support-policy-0018"
+    ],
+    "notes": "Summer break payments are based on spring results. For bachelor's students who take summer courses, the fall award is also based on spring results. For master's students whose summer semester is part of the curriculum, the fall award is based on summer results. Clause 19 covers documented Incomplete grades.",
+    "derived_from": "real-057"
+  },
+  {
+    "question_id": "real-058",
+    "question": "How does honors designation work for master's students?",
+    "language": "en",
+    "source": "derived",
+    "group": "answerable",
+    "relevant_chunk_ids": [
+      "graduation-policy-0009",
+      "graduation-policy-0010"
+    ],
+    "notes": "Clause 8 awards Distinction at a CGPA of 4.00. After excluding those graduates, the top 10% in each master's program qualify for Graduated with Honors, with fractional counts rounded up.",
+    "derived_from": "real-058"
+  },
+  {
+    "question_id": "real-059",
+    "question": "What CGPA do I need for a red diploma?",
+    "language": "en",
+    "source": "derived",
+    "group": "answerable",
+    "relevant_chunk_ids": [
+      "graduation-policy-0007",
+      "graduation-policy-0008",
+      "graduation-policy-0009",
+      "graduation-policy-0010"
+    ],
+    "notes": "Undergraduate thresholds are 3.67 for Cum Laude, 3.80 for Magna Cum Laude, 3.90 for Summa Cum Laude, and 4.00 for Distinction. Master's honors follow the separate rules in clause 8.",
+    "derived_from": "real-059"
+  },
+  {
+    "question_id": "real-060",
+    "question": "Is there a course overload form to register for more than 36 credits in a semester? I can't find it in Registrar.",
+    "language": "en",
+    "source": "derived",
+    "group": "answerable",
+    "relevant_chunk_ids": [
+      "undergraduate-academic-policies-0018",
+      "undergraduate-academic-policies-0019"
+    ],
+    "notes": "Section 3.3.7 places the Course Overload Form in SIS. Requests above 36 ECTS require School approval and final approval from the VPAA.",
+    "derived_from": "real-060"
   }
 ]
