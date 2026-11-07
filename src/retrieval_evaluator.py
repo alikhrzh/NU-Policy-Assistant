@@ -1,4 +1,3 @@
-from sentence_transformers import SentenceTransformer
 from pathlib import Path
 from embed import EmbeddingStore
 import json
@@ -41,7 +40,6 @@ class RetrievalEvaluator:
             similarity = chunks_tensor @ query_tensor
             top_scores, top_indices = torch.topk(similarity, k=self.top_k)
             chunk_ids = [chunks[index]["chunk_id"] for index in top_indices.tolist()]
-            scores = []
             relevant_ids = set(question["relevant_chunk_ids"])
             ranked_indices = torch.argsort(similarity,descending=True,)
             first_relevant_rank = None

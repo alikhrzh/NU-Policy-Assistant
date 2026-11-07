@@ -6,7 +6,7 @@ class EmbeddingStore:
     def __init__(self, model_name="multilingual-e5-small", questions_filename="questions"):
         self.model_name = model_name
         self.questions_filename = questions_filename
-
+        self.model = None
     def get_or_create_question_embeddings(self, ):
         path_embedding_question = Path("data/embeddings/questions") / f"{self.model_name}_{self.questions_filename}_question.json"
         if path_embedding_question.is_file():
@@ -50,7 +50,7 @@ class EmbeddingStore:
             result["question_id"] = question["question_id"]
             result["model"] = "multilingual-e5-small"
             query = "query: " + question["question"]
-            embedding = model_multilingual.encode(query, convert_to_tensor=True, normalize_embeddings=True, show_progress_bar=True)
+            embedding = model_multilingual.encode(query, convert_to_tensor=True, normalize_embeddings=True)
             result["embedding"] = embedding.tolist()
             results.append(result)
         path_embedding_question = Path("data/embeddings/questions") / f"{self.model_name}_{self.questions_filename}_question.json"
@@ -185,3 +185,20 @@ class EmbeddingStore:
             json.dump(records, json_file, ensure_ascii=False)
 
         return path_embedding_chunks
+    def encode_query(self, question):
+        if self.model is None:
+            match self.model_name:
+                case "multilingual-e5-small":
+                    self.model = SentenceTransformer("intfloat/multilingual-e5-small")
+                case "bge-m3":
+                    self.model = SentenceTransformer("BAAI/bge-m3")
+                case "Qwen3-Embedding-0.6B":
+                    self.model= SentenceTransformer("Qwen/Qwen3-Embedding-0.6B")
+                case _:
+                    raise SystemExit(f"Нет такой модели. Перезапусти поиск на новом наборе.")
+        if self.model_name == "multilingual-e5-small":
+            query = "query: " + question
+        else:
+            query = question
+        embedding = self.model.encode(query, convert_to_tensor=True, normalize_embeddings=True)
+        return embedding
