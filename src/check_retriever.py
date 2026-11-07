@@ -6,7 +6,7 @@ from retriever import Retriever
 question = "Можно ли взять больше 36 кредитов за семестр?"
 
 start = perf_counter()
-retriever = Retriever(model_name="bge-m3", top_k=5)
+retriever = Retriever(model_name="bge-m3", top_k=20)
 print(f"Создание Retriever: {perf_counter() - start:.3f} с")
 
 start = perf_counter()

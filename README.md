@@ -45,6 +45,17 @@ The prototype uses Sentence Transformers to encode queries and chunks with multi
 
 An initial token-length check on 110 undergraduate policy chunks found a maximum of 186 tokens within the model’s 512-token limit.
 
+### Single-query retrieval
+
+`Retriever` accepts a question in English or Russian and returns ranked chunks with their text, document IDs, page ranges, and similarity scores. It loads cached chunk embeddings once per instance and uses each chunk ID to look up the source text and metadata.
+
+In a local BGE-M3 check, the relevant policy clause for a Russian question about taking more than 36 credits ranked first. Creating the retriever took 168 ms. The first search took 8.69 seconds, including model loading, and three subsequent searches on the same instance took 30–31 ms each. These measurements cover retrieval for one repeated question.
+
+### Planned reranking experiment
+
+BGE-M3 will retrieve 20 candidates. The multilingual `BAAI/bge-reranker-v2-m3` cross-encoder will score each question–chunk pair and keep the five highest-ranked chunks for answer generation.
+
+The experiment will compare Hit@1, Hit@5, and warm retrieval latency before and after reranking on the eight English–Russian dev pairs. The 20-candidate pool sets the ceiling for the experiment. For the question about broken gym equipment (`real-013`), BGE-M3 ranked the relevant chunk 18th in Russian and 21st in English, so the reranker will see it only for the Russian query at this cutoff.
 ## Evaluation
 
 The evaluation set contains **65 questions**, including **60 real student questions**. The current corpus supports a complete answer for 26, a partial answer for 22, and no confirmed answer for 17. The 26 answerable questions have paired English and Russian versions with shared IDs and relevance labels. The split uses eight pairs for development and 18 for testing.
