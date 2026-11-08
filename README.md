@@ -1,22 +1,21 @@
 # NU Policy Assistant
 
-NU Policy Assistant is a RAG prototype for Nazarbayev University policies. It searches 960 passages from 12 documents, tracks their source pages, and evaluates retrieval in English and Russian. Answer generation and a user interface are planned.
+NU Policy Assistant is a retrieval prototype for Nazarbayev University policies. It searches **960 chunks from 12 documents** using English or Russian questions and returns passages with document IDs and source pages. The current pipeline supports semantic search and reranking. Answer generation with citations is the next step.
 
 ## Key findings
 
-- On 18 test pairs, Qwen3 had the highest Hit@1 at 10/18 in each language.
-- BGE-M3 found at least one labeled chunk in the top 20 for all 18 test questions in each language. The test set includes one question that overlaps with a dev question about course overload.
-- Fixed-length chunks can split policy clauses or combine unrelated sections. In the diagnostic baseline, both BGE-M3 and Qwen3 found the Sports Complex rules but ranked other passages above the instruction for reporting broken equipment.
+- BGE-M3 retrieved at least one labeled relevant chunk in the top 20 for all 18 test questions in both languages.
+- Reranking increased test Hit@1 from **50.0% to 77.8% in English** and from **44.4% to 72.2% in Russian**.
+- English test Hit@5 dropped from **100.0% to 88.9%**. Russian test Hit@5 stayed at **77.8%**. Median latency for warmed-up retrieval and reranking was about **1.2 seconds**.
+- Manual review of two English misses found that the reranker promoted passages about a different kind of probation or a different stage of academic leave.
 
 ## Pipeline
 
 ```text
-PDFs → extraction and cleaning → chunks → cached embeddings → ranked search → evaluation
+PDFs → text extraction and cleaning → chunks with page metadata
+     → cached chunk embeddings → BGE-M3 top 20
+     → cross-encoder reranking → top 5 passages
 ```
-
-- **Hit@k** is the share of questions with at least one labeled relevant chunk in the top k.
-- **MRR** is the mean reciprocal rank of the first labeled relevant chunk. A missing match contributes zero.
-- **Recall@k** is the share of labeled relevant chunks retrieved in the top k, averaged across questions.
 
 ## Quick start
 
@@ -24,117 +23,74 @@ Run from the repository root with Python 3.10 or newer and a compatible PyTorch 
 
 ```bash
 python -m pip install torch sentence-transformers
-mkdir -p data/embeddings/questions data/embeddings/chunks
+python src/check_retriever.py
 python src/main.py
 ```
 
-- Put prepared corpus files in `data/chunks/*-chunks.json` and the paired question sets in `data/eval/questions_answerable_en.json` and `data/eval/questions_answerable_ru.json`. The repository tracks these inputs for the baseline.
-- The script compares three models and reports Hit@1, Hit@5, Hit@20, and the first relevant rank for the 18 test pairs. The eight development IDs are defined in `src/main.py`. It reuses matching embedding files in `data/embeddings/`. On a cache miss, the model may need to download weights from Hugging Face. Regenerate the affected question cache when you add or edit questions or change query formatting.
-- To prepare the corpus from scratch, put source PDFs in `data/raw/` and record them in `data/sources.json`. PDF extraction uses `pypdf` and `pymupdf`. Scanned pages also need local Tesseract OCR. The preparation scripts write page-level JSON to `data/processed/`, then `src/chunk.py` builds the search inputs.
+- `src/check_retriever.py` checks one question and shows the selected passages, source pages, retrieval scores, and reranker scores.
+- `src/main.py` runs the before-and-after reranking evaluation on the 18 test pairs. It prints first relevant ranks, Hit@1, Hit@5, candidate Hit@20, and median latency after warm-up.
+- The scripts use prepared chunks in `data/chunks/*-chunks.json`. Evaluation also uses `data/eval/questions_answerable_en.json` and `data/eval/questions_answerable_ru.json`.
+- Model weights may download on the first run. Chunk embeddings are cached in `data/embeddings/chunks/`. Rebuild the affected chunk cache after changing the corpus. For evaluations that use cached question embeddings, regenerate the affected question cache after adding or editing questions or changing query formatting.
 
-## Document Processing
+## Document processing
 
-- Processed 12 documents covering academic policies, student status, housing, mobility, conduct, and campus services.
-- Recorded source URLs, document dates, access levels, verification status, and extraction notes.
-- Extracted PDF text with pypdf and PyMuPDF and used local Tesseract OCR for the scanned Sports Complex rules.
-- Generated 960 chunks from 231 pages using windows of up to 100 words with a 20-word overlap. Each chunk retains its document ID and source-page range.
+The corpus covers academic policies, student status, housing, mobility, conduct, and campus services. `data/sources.json` tracks document metadata, source URLs, access levels, and extraction notes.
 
-## Semantic Retrieval
+PDF text was extracted with pypdf and PyMuPDF. Scanned Sports Complex rules were processed with local Tesseract OCR. The processing pipeline generated 960 chunks from 231 pages using windows of up to 100 words with a 20-word overlap. Each chunk retains its document ID and page range.
 
-The prototype uses Sentence Transformers to encode queries and chunks with multilingual E5-small, BGE-M3, or Qwen3-Embedding-0.6B. It caches normalized embeddings and ranks chunks with PyTorch dot products. E5-small inference has been tested on Apple Metal (`mps`).
+To prepare the corpus from PDFs, put the source files in `data/raw/` and record them in `data/sources.json`. The extraction and cleaning scripts produce page-level JSON in `data/processed/`. `src/chunk.py` builds the search inputs.
 
-An initial token-length check on 110 undergraduate policy chunks found a maximum of 186 tokens within the model’s 512-token limit.
+## Retrieval and reranking
 
-### Single-query retrieval
+The embedding baseline compares multilingual E5-small, BGE-M3, and Qwen3-Embedding-0.6B. The retriever ranks normalized query and chunk embeddings by dot product using PyTorch. It loads the chunk embeddings once per instance and joins ranked results to their source text and page metadata by `chunk_id`.
 
-`Retriever` accepts a question in English or Russian and returns ranked chunks with their text, document IDs, page ranges, and similarity scores. It loads cached chunk embeddings once per instance and uses each chunk ID to look up the source text and metadata.
+The current reranking pipeline uses **BGE-M3** to retrieve 20 candidates. A separate multilingual cross-encoder, `BAAI/bge-reranker-v2-m3`, scores each question–passage pair and keeps the five highest-ranked passages. Each result retains its original retrieval score and its reranker score.
 
-In a local BGE-M3 check, the relevant policy clause for a Russian question about taking more than 36 credits ranked first. Creating the retriever took 168 ms. The first search took 8.69 seconds, including model loading, and three subsequent searches on the same instance took 30–31 ms each. These measurements cover retrieval for one repeated question.
+In a local BGE-M3 smoke test, the relevant clause for a Russian question about taking more than 36 credits ranked first. Creating the retriever took 168 ms. The first search took 8.69 seconds, including model loading. Three repeated searches on the same instance took 30–31 ms each. These timings cover retrieval for one repeated question.
 
-### Planned reranking experiment
-
-BGE-M3 will retrieve 20 candidates. The multilingual `BAAI/bge-reranker-v2-m3` cross-encoder will score each question–chunk pair and keep the five highest-ranked chunks for answer generation.
-
-The experiment will compare Hit@1, Hit@5, and warm retrieval latency before and after reranking on the eight English–Russian dev pairs. The 20-candidate pool sets the ceiling for the experiment. For the question about broken gym equipment (`real-013`), BGE-M3 ranked the relevant chunk 18th in Russian and 21st in English, so the reranker will see it only for the Russian query at this cutoff.
 ## Evaluation
 
-The evaluation set contains **65 questions**, including **60 real student questions**. The current corpus supports a complete answer for 26, a partial answer for 22, and no confirmed answer for 17. The 26 answerable questions have paired English and Russian versions with shared IDs and relevance labels. The split uses eight pairs for development and 18 for testing.
+The evaluation dataset contains **65 questions**, including 60 collected from students. The current corpus supports a complete answer for 26 questions and a partial answer for 22. The remaining 17 have no confirmed answer in the corpus.
 
-The earlier mixed-language E5-small run scored 4/8 for both Hit@1 and Hit@5.
+The 26 answerable questions have paired English and Russian versions with shared IDs and relevance labels. Eight pairs form the development set and 18 form the test set. All runs search the same corpus.
 
-### Development set
+- **Hit@k** is the share of questions with at least one labeled relevant chunk in the top *k*.
+- **MRR** is the mean reciprocal rank of the first labeled relevant chunk. A missing match contributes zero.
+- **Recall@k** is the share of labeled relevant chunks retrieved in the top *k*, averaged across questions.
 
-Each model searched the same 960 chunks using eight paired questions. Both languages use the same relevance labels. Five questions originated in English and three came from Russian student chats.
+### Embedding baseline
 
-| Model | EN Hit@1 | EN Hit@5 | EN Hit@20 | RU Hit@1 | RU Hit@5 | RU Hit@20 |
-|---|---:|---:|---:|---:|---:|---:|
-| multilingual-e5-small | 50% | 62.5% | 75% | 12.5% | 25% | 50% |
-| BGE-M3 | 37.5% | 87.5% | 87.5% | 50% | 87.5% | 100% |
-| Qwen3-Embedding-0.6B | 62.5% | 87.5% | 87.5% | 62.5% | 62.5% | 87.5% |
+| Model | EN dev Hit@1 / @5 / @20 | RU dev Hit@1 / @5 / @20 | EN test Hit@1 / @5 / @20 | RU test Hit@1 / @5 / @20 |
+| --- | ---: | ---: | ---: | ---: |
+| multilingual-e5-small | 4 / 5 / 6 | 1 / 2 / 4 | 7 / 14 / 16 | 4 / 12 / 14 |
+| BGE-M3 | 3 / 7 / 7 | 4 / 7 / 8 | 9 / 18 / 18 | 8 / 14 / 18 |
+| Qwen3-Embedding-0.6B | 5 / 7 / 7 | 5 / 5 / 7 | 10 / 17 / 18 | 10 / 14 / 16 |
 
-| Question | E5-small EN / RU | BGE-M3 EN / RU | Qwen3 EN / RU |
-|---|---:|---:|---:|
-| 001 — credit overload | 1 / 2 | 1 / 1 | 1 / 1 |
-| 002 — course retake | 1 / 11 | 2 / 5 | 2 / 1 |
-| 003 — withdrawal and GPA | 1 / 7 | 2 / 1 | 1 / 1 |
-| 004 — missed classes | 6 / 161 | 1 / 1 | 1 / 9 |
-| 005 — academic probation | 1 / 1 | 1 / 1 | 1 / 1 |
-| real-010 — dormitory rates | 29 / 27 | 4 / 3 | 2 / 6 |
-| real-013 — broken gym equipment | 34 / 21 | 21 / 18 | 34 / 64 |
-| real-022 — incorrect grade | 3 / 136 | 3 / 3 | 1 / 1 |
+Each cell shows the number of hits at the three cutoffs. The denominator is 8 per language on dev and 18 per language on test. Qwen3 led the embedding-only test comparison at Hit@1 with 10/18 in both languages. BGE-M3 had the strongest candidate coverage across both languages at the top-20 cutoff and was used for the reranking experiment.
 
-Ranks identify the first labeled relevant chunk. BGE-M3 achieved 7/8 Hit@5 in both languages. Qwen had the highest Hit@1 at 5/8 in both languages. The broken-equipment question missed the top five in all six runs.
+### Reranking results
 
-These results are preliminary. Each question accounts for 12.5 percentage points. The Qwen query instruction and embedding cache provenance still need verification.
+| Split | Language | Candidate Hit@20 | Hit@1 before → after | Hit@5 before → after | Median retrieval | Median reranking | Median total |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Dev | EN | 7/8 | 3/8 → 5/8 | 7/8 → 7/8 | 71.9 ms | 1,057.0 ms | 1,118.4 ms |
+| Dev | RU | 8/8 | 4/8 → 6/8 | 7/8 → 8/8 | 40.6 ms | 1,023.9 ms | 1,064.6 ms |
+| Test | EN | 18/18 | 9/18 → 14/18 | 18/18 → 16/18 | 51.1 ms | 1,138.2 ms | 1,180.0 ms |
+| Test | RU | 18/18 | 8/18 → 13/18 | 14/18 → 14/18 | 56.1 ms | 1,133.2 ms | 1,199.1 ms |
 
-The evaluator uses cached embeddings, returns the requested top-k results, and records the first relevant rank across the corpus. The comparison script reports Hit@1, Hit@5, and Hit@20 from those ranks.
+Median total is calculated from the combined time for each question. Timing excludes model startup and answer generation.
 
-### Test set
+On dev, reranking moved the relevant passage for the Russian gym equipment question (`real-013`) from rank 18 to rank 1. The English version's relevant passage ranked 21st in the embedding baseline and fell outside the candidate pool.
 
-The test set contains 18 questions, each available in English and Russian. Both versions share the same question ID and relevance labels. The 8 development pairs are reported separately. All three models searched the same corpus of 960 chunks.
+### Error analysis
 
-| Model | EN Hit@1 | EN Hit@5 | EN Hit@20 | RU Hit@1 | RU Hit@5 | RU Hit@20 |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| multilingual-e5-small | 7/18 | 14/18 | 16/18 | 4/18 | 12/18 | 14/18 |
-| BGE-M3 | 9/18 | **18/18** | **18/18** | 8/18 | **14/18** | **18/18** |
-| Qwen3-Embedding-0.6B | **10/18** | 17/18 | **18/18** | **10/18** | **14/18** | 16/18 |
+- **Academic and disciplinary probation (`real-041`, EN).** The first relevant rank went from 4 to 10. The reranker put an academic status notification passage first. The rest of the top five discussed disciplinary probation or sanctions. The question says “probation” without naming which kind. The relevance labels assume academic probation based on grades.
+- **Applying for academic leave (`real-051`, EN).** The first relevant rank went from 3 to 11. All five leading passages came from the correct policy. They covered a definition, a return-date form, withdrawal and dismissal material, the return-from-leave procedure, and the document scope. The application instructions fell outside the top five.
+- **Repeated policy titles.** One high-ranked passage for `real-051` mentions leave of absence in the repeated document title while its surrounding text covers withdrawal and dismissal. Whether repeated titles affect ranking more broadly remains an open question. These two cases did not establish a preference for terms near the start of a chunk.
 
-Qwen3 achieved the highest Hit@1 in both languages. BGE-M3 retrieved at least one relevant chunk within the top 20 for every test question in both languages. The two Russian queries Qwen3 missed at that cutoff concerned academic leave. Their first relevant chunks ranked 143rd and 22nd with Qwen3, compared with 7th and 14th with BGE-M3.
+The earlier [retrieval diagnostics](data/model_evaluation_results/retrieval-diagnostics.json) cover the original 35-question dataset. That run identified other sources of confusion, including campus access versus dormitory guest rules, and excused class absences versus academic leave. Fixed-length chunks can also split policy clauses or combine text from different sections.
 
-Each question accounts for 5.6 percentage points per language. The test question about the course overload form (`real-060`) overlaps with a development question about exceeding 36 credits (`001`). Hit@k measures whether at least one labeled chunk appears in the top *k*. Questions that require evidence from multiple chunks may still have incomplete evidence even when counted as hits.
+### Evaluation limits
 
-### Retrieval Diagnostic Baseline
+A single question changes a hit rate by 12.5 percentage points on dev and 5.6 points on test. The test question about the course overload form (`real-060`) overlaps with the dev question about exceeding 36 credits (`001`).
 
-BGE-M3 and Qwen3 searched the same 960 chunks using all 35 original questions. Retrieval metrics cover the 8 answerable and 13 partial questions separately. The 14 unanswerable questions are retained for later testing of how the assistant responds when evidence is missing.
-
-| Group | Model | Hit@1 | Hit@5 | Hit@20 | MRR | Recall@20 | Recall@50 |
-|---|---|---:|---:|---:|---:|---:|---:|
-| Answerable | BGE-M3 | 3/8 | 7/8 | 8/8 | 0.590 | 95.0% | 100% |
-| Answerable | Qwen3 | 5/8 | 6/8 | 7/8 | 0.710 | 82.5% | 85.0% |
-| Partial | BGE-M3 | 5/13 | 8/13 | 10/13 | 0.501 | 71.8% | 83.3% |
-| Partial | Qwen3 | 5/13 | 7/13 | 10/13 | 0.472 | 64.1% | 85.9% |
-
-Recall is averaged across questions and measures coverage of labeled chunks. For partial questions, the labels support only part of the requested answer. Per-question results and language breakdowns are stored in [retrieval-diagnostics.json](data/model_evaluation_results/retrieval-diagnostics.json).
-
-**Observed failure modes**
-
-- **Wrong passage within the right document.** On answerable questions, BGE-M3 and Qwen3 ranked a chunk from the correct document first in 7/8 and 8/8 cases. The relevant chunk was first in 3/8 and 5/8 cases. For `real-013`, both found the Sports Complex rules but ranked the reporting instruction 18th and 64th.
-- **Overlap between topics.** For `real-023`, both models ranked housing and mobility passages above campus access rules. For `real-008`, academic leave and missed assessments competed with attendance rules.
-- **Colloquial mixed-language queries.** For `real-021`, BGE-M3 ranked the credit-load rule first, while Qwen3 ranked it 20th and returned dormitory passages first. Whether wording contributed to the miss remains a hypothesis.
-- **Labels that need review.** The labeled passage for `real-026` describes attendance disclosures. It gives limited support for a question about where to find general syllabus rules.
-
-Keep this run as the baseline. Test splitting Sports Complex clause 96 into its own chunk and normalizing the wording of `real-021` in separate experiments. Review the label for `real-026` before comparing updated metrics.
-
-## Technologies
-
-Python, PyTorch, Sentence Transformers, pypdf, PyMuPDF, and Tesseract OCR.
-
-## Next Steps
-
-1. Compare reranking against the retrieval baseline on the dev set. Track Hit@k and coverage of labeled chunks.
-2. Generate answers with document and page citations. Check partial and unanswerable cases separately.
-3. Add a small interface and a reproducible demo.
-
-## Source Scope
-
-Some source materials have restricted access and are used in the local evaluation. Several document versions still require verification. This is an independent learning project, and official university guidance should come from NU
+Hit@k records the presence of at least one labeled passage. Questions that require multiple passages can count as hits with incomplete evidence. The reranking results measure passage
