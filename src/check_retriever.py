@@ -1,29 +1,37 @@
 from time import perf_counter
 
+from reranker import Reranker
 from retriever import Retriever
 
 
 question = "Можно ли взять больше 36 кредитов за семестр?"
 
-start = perf_counter()
 retriever = Retriever(model_name="bge-m3", top_k=20)
-print(f"Создание Retriever: {perf_counter() - start:.3f} с")
+reranker = Reranker(top_n=5)
 
 start = perf_counter()
-results = retriever.search(question)
-print(f"Первый поиск: {perf_counter() - start:.3f} с")
+candidates = retriever.search(question)
+retrieval_time = perf_counter() - start
 
-for attempt in range(2, 5):
-    start = perf_counter()
-    retriever.search(question)
-    print(f"Поиск {attempt}: {perf_counter() - start:.3f} с")
+start = perf_counter()
+results = reranker.rerank(question, candidates)
+reranking_time = perf_counter() - start
 
 print(f"Вопрос: {question}")
-print(f"Найдено чанков: {len(results)}")
+print(f"Кандидатов: {len(candidates)}, после реранжирования: {len(results)}")
+print(f"Первый поиск: {retrieval_time:.3f} с")
+print(f"Первое реранжирование: {reranking_time:.3f} с")
+
+original_ranks = {
+    chunk["chunk_id"]: rank
+    for rank, chunk in enumerate(candidates, start=1)
+}
 
 for rank, chunk in enumerate(results, start=1):
-    print(f"\n#{rank} | score={chunk['score']:.4f}")
-    print(f"Чанк: {chunk['chunk_id']}")
+    chunk_id = chunk["chunk_id"]
+    print(f"\n#{original_ranks[chunk_id]} → #{rank} | {chunk_id}")
+    print(f"Retrieval score: {chunk['score']:.4f}")
+    print(f"Rerank score: {chunk['rerank_score']:.4f}")
     print(
         f"Источник: {chunk['document_id']}, "
         f"стр. {chunk['page_start']}–{chunk['page_end']}"

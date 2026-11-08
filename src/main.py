@@ -1,18 +1,18 @@
-from retrieval_evaluator import RetrievalEvaluator
+import json
+from pathlib import Path
+from statistics import median
+from time import perf_counter
+
+from reranker import Reranker
+from retriever import Retriever
 
 
-models = [
-    "multilingual-e5-small",
-    "bge-m3",
-    "Qwen3-Embedding-0.6B",
-]
-
-question_sets = {
-    "EN": "questions_answerable_en",
-    "RU": "questions_answerable_ru",
+QUESTION_SETS = {
+    "EN": "questions_answerable_en.json",
+    "RU": "questions_answerable_ru.json",
 }
 
-dev_ids = (
+DEV_IDS = (
     "001",
     "002",
     "003",
@@ -23,59 +23,80 @@ dev_ids = (
     "real-022",
 )
 
-top_k = 20
 
-for model_name in models:
-    test_results_by_language = {}
+def first_relevant_rank(chunks, relevant_ids):
+    for rank, chunk in enumerate(chunks, start=1):
+        if chunk["chunk_id"] in relevant_ids:
+            return rank
+    return None
 
-    for language, filename in question_sets.items():
-        evaluator = RetrievalEvaluator(
-            questions_filename=filename,
-            model_name=model_name,
-            top_k=top_k,
-        )
-        report = evaluator.evaluate()
 
-        results_by_id = {
-            result["question_id"]: result
-            for result in report["results"]
-        }
+def format_hit_rate(ranks, k):
+    hits = sum(rank is not None and rank <= k for rank in ranks)
+    return f"{hits}/{len(ranks)} ({hits / len(ranks):.1%})"
 
-        missing_ids = set(dev_ids) - results_by_id.keys()
-        if missing_ids:
-            raise ValueError(f"{language}: missing dev IDs {sorted(missing_ids)}")
 
-        test_results = [
-            result
-            for question_id, result in results_by_id.items()
-            if question_id not in dev_ids
-        ]
-        test_results_by_language[language] = test_results
+def main():
+    retriever = Retriever(model_name="bge-m3", top_k=20)
+    reranker = Reranker(top_n=5)
 
-        total = len(test_results)
-        if total == 0:
-            raise ValueError(f"{language}: test set is empty")
+    # Warm up both models before measuring latency.
+    warmup_question = "Can I take more than 36 credits in one semester?"
+    warmup_candidates = retriever.search(warmup_question)
+    reranker.rerank(warmup_question, warmup_candidates)
 
-        print(f"\n{model_name} | {language} | TEST")
-        print(f"Questions: {total}")
+    for language, filename in QUESTION_SETS.items():
+        path = Path("data/eval") / filename
+        with path.open(encoding="utf-8") as json_file:
+            questions_by_id = {
+                question["question_id"]: question
+                for question in json.load(json_file)
+            }
 
-        for k in (1, 5, 20):
-            hits = sum(
-                result["first_relevant_rank"] is not None
-                and result["first_relevant_rank"] <= k
-                for result in test_results
-            )
-            print(f"Hit@{k}: {hits}/{total} ({hits / total:.1%})")
+        test_ids = [question_id for question_id in questions_by_id if question_id not in DEV_IDS]
 
-    print("\nTEST ranks by question")
-    ru_ranks = {
-        result["question_id"]: result["first_relevant_rank"]
-        for result in test_results_by_language["RU"]
-    }
+        before_ranks = []
+        after_ranks = []
+        retrieval_times = []
+        reranking_times = []
+        total_times = []
 
-    for result in test_results_by_language["EN"]:
-        question_id = result["question_id"]
-        print(
-            f"{question_id}: EN={result['first_relevant_rank']}, "
-            f"RU={ru_ranks[question_id]}"
-        )
+        print(f"\nBGE-M3 | {language} | TEST")
+        print("First relevant rank: retrieval top 20 → reranked top 5")
+
+        for question_id in test_ids:
+            question = questions_by_id[question_id]
+            query = question["question"]
+            relevant_ids = set(question["relevant_chunk_ids"])
+
+            start = perf_counter()
+            candidates = retriever.search(query)
+            retrieved_at = perf_counter()
+            reranked = reranker.rerank(query, candidates)
+            finished_at = perf_counter()
+
+            retrieval_times.append(retrieved_at - start)
+            reranking_times.append(finished_at - retrieved_at)
+            total_times.append(finished_at - start)
+
+            before = first_relevant_rank(candidates, relevant_ids)
+            after = first_relevant_rank(reranked, relevant_ids)
+            before_ranks.append(before)
+            after_ranks.append(after)
+
+            print(f"  {question_id}: {before or 'miss'} → {after or 'miss'}")
+
+        print(f"\nQuestions: {len(before_ranks)}")
+        for k in (1, 5):
+            before = format_hit_rate(before_ranks, k)
+            after = format_hit_rate(after_ranks, k)
+            print(f"Hit@{k}: {before} → {after}")
+
+        print(f"Candidate Hit@20: {format_hit_rate(before_ranks, 20)}")
+        print(f"Median retrieval: {median(retrieval_times) * 1000:.1f} ms")
+        print(f"Median reranking: {median(reranking_times) * 1000:.1f} ms")
+        print(f"Median retrieval + reranking: {median(total_times) * 1000:.1f} ms")
+
+
+if __name__ == "__main__":
+    main()
