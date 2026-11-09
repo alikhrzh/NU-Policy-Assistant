@@ -1,6 +1,6 @@
 # NU Policy Assistant
 
-NU Policy Assistant is a retrieval prototype for Nazarbayev University policies. It searches **960 chunks from 12 documents** using English or Russian questions and returns passages with document IDs and source pages. The current pipeline supports semantic search and reranking. Answer generation with citations is the next step.
+NU Policy Assistant is a retrieval prototype for Nazarbayev University policies. It searches **960 chunks from 12 documents** using English or Russian questions and returns passages with document IDs and source pages. The local Streamlit app displays ranked passages and lets users compare semantic retrieval with cross-encoder reranking. Answer generation with citations is the next step.
 
 ## Key findings
 
@@ -19,18 +19,23 @@ PDFs → text extraction and cleaning → chunks with page metadata
 
 ## Quick start
 
-Run from the repository root with Python 3.10 or newer and a compatible PyTorch installation.
+Run from the repository root in a Python environment with PyTorch and Sentence Transformers installed.
 
 ```bash
-python -m pip install torch sentence-transformers
-python src/check_retriever.py
-python src/main.py
+python -m pip install -r requirements.txt
+streamlit run src/app.py
 ```
 
-- `src/check_retriever.py` checks one question and shows the selected passages, source pages, retrieval scores, and reranker scores.
-- `src/main.py` runs the before-and-after reranking evaluation on the 18 test pairs. It prints first relevant ranks, Hit@1, Hit@5, candidate Hit@20, and median latency after warm-up.
-- The scripts use prepared chunks in `data/chunks/*-chunks.json`. Evaluation also uses `data/eval/questions_answerable_en.json` and `data/eval/questions_answerable_ru.json`.
-- Model weights may download on the first run. Chunk embeddings are cached in `data/embeddings/chunks/`. Rebuild the affected chunk cache after changing the corpus. For evaluations that use cached question embeddings, regenerate the affected question cache after adding or editing questions or changing query formatting.
+The app binds to localhost and uses Streamlit 1.56.0 with usage statistics disabled. It requires prepared passages in `data/chunks/`, the BGE-M3 embedding cache at `data/embeddings/chunks/bge-m3_chunks.json`, and locally cached weights for `BAAI/bge-m3` and `BAAI/bge-reranker-v2-m3`. On a fresh setup, run `python src/check_retriever.py` with network access to prepare the model caches before starting the offline app.
+
+Enter an English or Russian question and select **Search policies**. The default search retrieves 20 candidates, reranks them, and shows five passages. **Advanced** lets you change both counts or turn reranking off to see the original BGE-M3 order. Each result shows its document, page range, passage text, and relative ranking scores. The timing line reports the original search duration for cached results.
+
+### Command-line checks
+
+- `python src/check_retriever.py` checks one question and shows source pages, scores, and rank changes.
+- `python src/main.py` compares retrieval before and after reranking on 18 test pairs. It reads the English and Russian sets in `data/eval/` and reports Hit@1, Hit@5, candidate Hit@20, and median latency after warm-up.
+
+Rebuild the affected chunk embedding cache after changing the corpus. For evaluation scripts that use cached question embeddings, rebuild the affected question cache after changing questions or query formatting.
 
 ## Document processing
 
@@ -93,4 +98,15 @@ The earlier [retrieval diagnostics](data/model_evaluation_results/retrieval-diag
 
 A single question changes a hit rate by 12.5 percentage points on dev and 5.6 points on test. The test question about the course overload form (`real-060`) overlaps with the dev question about exceeding 36 credits (`001`).
 
-Hit@k records the presence of at least one labeled passage. Questions that require multiple passages can count as hits with incomplete evidence. The reranking results measure passage
+Hit@k records the presence of at least one labeled passage. Questions that require multiple passages can count as hits with incomplete evidence.
+
+Answer quality and citation accuracy still need separate evaluation.
+
+## Next steps
+
+1. Generate answers in English and Russian with document and page citations.
+2. Evaluate complete, partial, and unsupported answers and verify that the cited passages support each claim.
+
+## Source scope
+
+Some source materials have restricted access and are used in local evaluation. Several document versions still require verification. This is an independent project. Consult Nazarbayev University for official policy guidance.
