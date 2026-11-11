@@ -98,19 +98,18 @@ python src/main.py
 
 `check_retriever.py` shows the passages, page ranges, scores, and rank changes for one question. `main.py` evaluates reranking on the 18 test pairs from the EN and RU sets in `data/eval/`.
 
-## Optional PostgreSQL connection check
+## Local PostgreSQL connection check
 
-`src/db.py` opens a PostgreSQL connection and runs `SELECT 1`. The search app currently reads passages and embeddings from local files, so it can run without a database.
-
-With PostgreSQL running and an existing database, install the driver and set `DATABASE_URL` in your environment:
+Copy `.env.example` to `.env` if needed and use the same local password in both settings. Docker Compose reads `.env` automatically. Export the PostgreSQL URL separately for the Python check.
 
 ```bash
-python -m pip install "psycopg[binary]"
-export DATABASE_URL='postgresql://USER:PASSWORD@localhost:5432/DB_NAME'
+python -m pip install -r requirements.txt
+docker compose up -d --wait postgres
+export DATABASE_URL="$(docker compose config --environment | sed -n 's/^DATABASE_URL=//p')"
 python src/db.py
 ```
 
-Replace the placeholders with your local connection details. Keep credentials out of version control. If you store the URL in `.env`, load it into the environment before running the check.
+PostgreSQL listens on `127.0.0.1:5433` and stores its data in a Docker volume. Streamlit search uses local passage and embedding files.
 
 ## Next steps
 
