@@ -4,6 +4,10 @@ NU Policy Assistant is a local search app for Nazarbayev University policies. As
 
 The Streamlit app lets you compare semantic search with cross-encoder reranking. The project currently returns source passages. Answer generation with citations is planned.
 
+## Live demo
+
+The hosted Streamlit demo searches **352 passages from four public NU policy documents** in English and Russian. Use **Advanced** to compare results with and without cross-encoder reranking. [Open the live demo](https://3ifxeb8jsimdx53b5muhld.streamlit.app/) · [Demo repository](https://github.com/alikhrzh/NU-Policy-Assistant-demo)
+
 ## Results at a glance
 
 - **BGE-M3 found a labeled passage in the top 20 for all 18 test questions in both languages.**
