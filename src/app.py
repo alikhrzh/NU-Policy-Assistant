@@ -1,7 +1,9 @@
+import psycopg
 import streamlit as st
 
+from db import save_search
 from ui_components import show_results
-from ui_search import load_pipeline, search
+from ui_search import MODEL_LABELS, search
 from ui_style import apply_style
 
 
@@ -16,20 +18,6 @@ apply_style()
 st.html('<h1 class="policy-identity">NU Policy Assistant</h1>')
 st.write("Search Nazarbayev University policy passages in English or Russian.")
 
-try:
-    with st.spinner("Loading local search models and warming up…"):
-        load_pipeline()
-except (Exception, SystemExit) as error:
-    st.error("Could not start policy search.")
-    if isinstance(error, (FileNotFoundError, ValueError)) and str(error).startswith(("Restore ", "Run ")):
-        st.write(str(error))
-    else:
-        st.write(
-            "Check that the prepared chunks and BGE-M3 embeddings are present "
-            "and that BAAI/bge-m3 and BAAI/bge-reranker-v2-m3 are in your local model cache."
-        )
-    st.stop()
-
 st.caption("Try a question")
 for example in EXAMPLES:
     st.button(example, on_click=st.session_state.update, kwargs={"policy_question": example})
@@ -37,6 +25,9 @@ for example in EXAMPLES:
 with st.form("policy_search"):
     question = st.text_input("Question", key="policy_question", placeholder="Ask about a university policy")
     with st.expander("Advanced"):
+        model_name = st.selectbox(
+            "Embedding model", tuple(MODEL_LABELS), format_func=MODEL_LABELS.__getitem__
+        )
         top_k = st.slider("Results shown", 1, 10, 5)
         pool_size = st.slider("Candidate pool size", 10, 50, 20)
         use_reranker = st.toggle("Rerank results", value=True)
@@ -51,15 +42,26 @@ if submitted:
     else:
         try:
             with st.spinner("Searching policy passages…"):
-                results = search(question, top_k, pool_size, use_reranker)
-            st.session_state.policy_results = (question, results)
-        except (Exception, SystemExit):
-            st.error("Search failed. Check that the chunk files and BGE-M3 embedding cache match, then try again.")
+                results = search(question, top_k, pool_size, use_reranker, model_name=model_name)
+            st.session_state.policy_results = (question, model_name, results)
+        except (Exception, SystemExit) as error:
+            st.error(f"Search failed with {MODEL_LABELS[model_name]}.")
+            if isinstance(error, (FileNotFoundError, ValueError)) and str(error).startswith(("Restore ", "Run ")):
+                st.write(str(error))
+            else:
+                st.write("Check the local model cache and the prepared chunks and embeddings.")
+        else:
+            chunk_ids = [chunk["chunk_id"] for chunk in results]
+            try:
+                save_search(question, chunk_ids, model_name, use_reranker)
+            except (KeyError, psycopg.Error):
+                st.warning("Search history could not be saved. Check the local PostgreSQL connection.")
 
 if "policy_results" in st.session_state:
-    searched_question, results = st.session_state.policy_results
+    searched_question, searched_model, results = st.session_state.policy_results
     st.subheader("Matching passages")
     st.text(searched_question, width="stretch")
+    st.caption(MODEL_LABELS[searched_model])
     if results:
         show_results(results)
     else:

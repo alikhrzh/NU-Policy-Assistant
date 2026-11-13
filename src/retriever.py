@@ -25,7 +25,10 @@ class Retriever:
 
     def search(self, question: str):
         query_embedding = self.embedding_store.encode_query(question)
-        query_embedding = query_embedding.to(self.chunks_tensor.device)
+        query_embedding = query_embedding.to(
+            device=self.chunks_tensor.device,
+            dtype=self.chunks_tensor.dtype,
+        )
 
         scores = self.chunks_tensor @ query_embedding
         k = min(self.top_k, len(self.chunks))
