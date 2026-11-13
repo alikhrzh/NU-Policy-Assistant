@@ -23,10 +23,10 @@ python -m pip install torch sentence-transformers
 python -m pip install -r requirements.txt
 ```
 
-The app uses prepared passages in `data/chunks/`, the embedding cache at `data/embeddings/chunks/bge-m3_chunks.json`, and local weights for `BAAI/bge-m3` and `BAAI/bge-reranker-v2-m3`. On a fresh setup, run the command-line check with network access to download the model weights:
+Set up the [local PostgreSQL corpus](#local-postgresql-corpus-and-search-history) before running search or reranking evaluation. The app reads passages from PostgreSQL and uses the embedding cache at `data/embeddings/chunks/bge-m3_chunks.json`, and local weights for `BAAI/bge-m3` and `BAAI/bge-reranker-v2-m3`. On a fresh setup, run the command-line check with network access to download the model weights:
 
 ```bash
-python src/check_retriever.py
+python -m src.evaluation.check_retriever
 ```
 
 Then start the local app:
@@ -35,9 +35,17 @@ Then start the local app:
 python -m streamlit run src/app.py
 ```
 
-Enter a question and select **Search policies**. By default, the app retrieves 20 candidates and displays the five highest-ranked passages after reranking. Use **Advanced** to change either count or turn reranking off and inspect the original BGE-M3 order. Scores are relative ranking signals. For cached results, the timing line shows how long the original search took.
+Enter a question and select **Search policies**. By default, the app retrieves 20 candidates and displays the five highest-ranked passages after reranking. Use **Advanced** to choose an embedding model, change either count, or turn reranking off. Qwen3-Embedding-0.6B and Multilingual E5-small each require their own local model weights and chunk embedding cache. Scores are relative ranking signals. For cached results, the timing line shows how long the original search took.
 
-The app runs on localhost with Streamlit 1.56.0 and usage statistics disabled. Once the weights and embeddings are available locally, the app runs offline.
+The app runs on localhost with Streamlit 1.56.0 and usage statistics disabled. Once the weights and embeddings are available locally, the app can search without internet access while local PostgreSQL is running.
+
+## Project layout
+
+- `src/app.py` and `src/ui/` contain the Streamlit entry point and display components.
+- `src/ingestion/` prepares the corpus from PDFs.
+- `src/retrieval/` handles embeddings, search, and reranking.
+- `src/evaluation/` contains the evaluation and diagnostic commands.
+- `src/db/` handles the PostgreSQL connection and search history.
 
 ## How search works
 
@@ -48,9 +56,9 @@ Question → BGE-M3 embedding → top 20 candidates → cross-encoder → top 5 
 
 The corpus covers academic policies, student status, housing, mobility, conduct, and campus services. `data/sources.json` records source URLs, access levels, and extraction notes. Text was extracted using pypdf and PyMuPDF. The scanned Sports Complex rules were processed with Tesseract OCR. The pipeline generated 960 chunks from 231 pages using windows of up to 100 words with a 20-word overlap.
 
-The retriever ranks normalized embeddings by dot product in PyTorch and joins results to source text and page metadata by `chunk_id`. The cross-encoder `BAAI/bge-reranker-v2-m3` scores each question–passage pair. The app keeps both scores and shows where each passage ranked before reranking.
+The retriever ranks normalized embeddings by dot product in PyTorch and loads candidate text and page metadata from PostgreSQL in one query, then restores the PyTorch ranking by `chunk_id`. The cross-encoder `BAAI/bge-reranker-v2-m3` scores each question–passage pair. The app keeps both scores and shows where each passage ranked before reranking.
 
-To rebuild the corpus, put the PDFs in `data/raw/` and register them in `data/sources.json`. The extraction and cleaning scripts produce page-level JSON in `data/processed/`, and `src/chunk.py` builds the chunks. Rebuild the chunk embedding cache when the corpus changes.
+To rebuild the corpus, put the PDFs in `data/raw/` and register them in `data/sources.json`. The extraction and cleaning scripts produce page-level JSON in `data/processed/`, and `src/ingestion/chunk.py` builds the chunks. Rebuild the chunk embedding cache when the corpus changes.
 
 ## Evaluation
 
@@ -96,24 +104,26 @@ One question changes Hit@k by 12.5 percentage points on dev and 5.6 points on te
 ### Reproduce the checks
 
 ```bash
-python src/check_retriever.py
-python src/main.py
+python -m src.evaluation.check_retriever
+python -m src.evaluation.evaluate_reranking
 ```
 
-`check_retriever.py` shows the passages, page ranges, scores, and rank changes for one question. `main.py` evaluates reranking on the 18 test pairs from the EN and RU sets in `data/eval/`.
+`check_retriever.py` shows the passages, page ranges, scores, and rank changes for one question. `evaluate_reranking.py` evaluates reranking on the 18 test pairs from the EN and RU sets in `data/eval/`.
 
-## Local PostgreSQL connection check
+## Local PostgreSQL corpus and search history
 
-Copy `.env.example` to `.env` if needed and use the same local password in both settings. Docker Compose reads `.env` automatically. Export the PostgreSQL URL separately for the Python check.
+Copy `.env.example` to `.env` if needed and use the same local password in both settings. Docker Compose reads `.env` automatically. Export the PostgreSQL URL in the terminal used to run Streamlit.
 
 ```bash
 python -m pip install -r requirements.txt
 docker compose up -d --wait postgres
 export DATABASE_URL="$(docker compose config --environment | sed -n 's/^DATABASE_URL=//p')"
-python src/db.py
+python -m src.db.postgres
+docker compose exec -T postgres psql -U nu_policy -d nu_policy -v ON_ERROR_STOP=1 < src/db/schema.sql
+python -m src.db.import_corpus
 ```
 
-PostgreSQL listens on `127.0.0.1:5433` and stores its data in a Docker volume. Streamlit search uses local passage and embedding files.
+PostgreSQL listens on `127.0.0.1:5433` and stores its data in a Docker volume. Run the commands above from the repository root to create the three tables and import the corpus. Then start Streamlit in the same terminal with `python -m streamlit run src/app.py`. Each successful search records the question, ordered chunk IDs, result count, embedding model, and reranking setting. Search reads passages from PostgreSQL and embeddings from local files. Restart Streamlit after importing a changed corpus to clear cached search results.
 
 ## Next steps
 

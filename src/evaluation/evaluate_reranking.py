@@ -3,8 +3,8 @@ from pathlib import Path
 from statistics import median
 from time import perf_counter
 
-from reranker import Reranker
-from retriever import Retriever
+from src.retrieval.reranker import Reranker
+from src.retrieval.retriever import Retriever
 
 
 QUESTION_SETS = {

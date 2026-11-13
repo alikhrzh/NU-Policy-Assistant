@@ -1,7 +1,9 @@
 import json
-from embed import EmbeddingStore
 import torch
-from pathlib import Path
+
+from src.db.postgres import load_chunks
+from src.retrieval.embed import EmbeddingStore
+
 
 class Retriever:
     def __init__(self, model_name="multilingual-e5-small", top_k=5):
@@ -16,12 +18,6 @@ class Retriever:
                 f"top_k должен быть от 1 до {len(self.chunks)}."
             )
         self.chunks_tensor = torch.tensor([chunk["embedding"] for chunk in self.chunks ], dtype=torch.float32)
-        self.chunks_by_id = {}
-
-        for path in Path("data/chunks").glob("*-chunks.json"):
-            with path.open(encoding="utf-8") as json_file:
-                for chunk in json.load(json_file):
-                    self.chunks_by_id[chunk["chunk_id"]] = chunk
 
     def search(self, question: str):
         query_embedding = self.embedding_store.encode_query(question)
@@ -34,18 +30,9 @@ class Retriever:
         k = min(self.top_k, len(self.chunks))
         top_scores, top_indices = torch.topk(scores, k=k)
 
-        results = []
-        for score, index in zip(top_scores.tolist(), top_indices.tolist()):
-            chunk_id = self.chunks[index]["chunk_id"]
-            chunk = self.chunks_by_id[chunk_id]
-            results.append({
-                "chunk_id": chunk["chunk_id"],
-                "document_id": chunk["document_id"],
-                "page_start": chunk["page_start"],
-                "page_end": chunk["page_end"],
-                "text": chunk["text"],
-                "score": score,
-            })
-
-        return results
-
+        chunk_ids = [self.chunks[index]["chunk_id"] for index in top_indices.tolist()]
+        chunks_by_id = load_chunks(chunk_ids)
+        return [
+            dict(chunks_by_id[chunk_id], score=score)
+            for chunk_id, score in zip(chunk_ids, top_scores.tolist(), strict=True)
+        ]

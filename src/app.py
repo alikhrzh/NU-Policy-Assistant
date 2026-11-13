@@ -1,10 +1,10 @@
 import psycopg
 import streamlit as st
 
-from db import save_search
-from ui_components import show_results
-from ui_search import MODEL_LABELS, search
-from ui_style import apply_style
+from src.db.postgres import ChunkCorpusError, save_search
+from src.ui.ui_components import show_results
+from src.retrieval.ui_search import MODEL_LABELS, search
+from src.ui.ui_style import apply_style
 
 
 EXAMPLES = (
@@ -48,8 +48,14 @@ if submitted:
             st.error(f"Search failed with {MODEL_LABELS[model_name]}.")
             if isinstance(error, (FileNotFoundError, ValueError)) and str(error).startswith(("Restore ", "Run ")):
                 st.write(str(error))
+            elif isinstance(error, ChunkCorpusError):
+                st.write(str(error))
+            elif isinstance(error, psycopg.Error) or (
+                isinstance(error, KeyError) and error.args == ("DATABASE_URL",)
+            ):
+                st.write("Check DATABASE_URL and confirm that the corpus is imported into PostgreSQL.")
             else:
-                st.write("Check the local model cache and the prepared chunks and embeddings.")
+                st.write("Check the local model weights and the prepared embedding cache.")
         else:
             chunk_ids = [chunk["chunk_id"] for chunk in results]
             try:

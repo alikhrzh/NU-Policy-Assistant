@@ -1,5 +1,5 @@
 from pathlib import Path
-from embed import EmbeddingStore
+from src.retrieval.embed import EmbeddingStore
 import json
 import torch
 

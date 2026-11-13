@@ -1,7 +1,7 @@
 from time import perf_counter
 
-from reranker import Reranker
-from retriever import Retriever
+from src.retrieval.reranker import Reranker
+from src.retrieval.retriever import Retriever
 
 
 question = "Можно ли взять больше 36 кредитов за семестр?"

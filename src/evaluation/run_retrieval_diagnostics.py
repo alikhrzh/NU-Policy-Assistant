@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from retrieval_evaluator import RetrievalEvaluator
+from src.evaluation.retrieval_evaluator import RetrievalEvaluator
 
 
 MODELS = ("bge-m3", "Qwen3-Embedding-0.6B")

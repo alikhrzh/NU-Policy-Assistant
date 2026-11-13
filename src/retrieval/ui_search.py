@@ -10,8 +10,8 @@ import streamlit as st
 os.environ["HF_HUB_OFFLINE"] = "1"
 os.environ["HF_HUB_DISABLE_TELEMETRY"] = "1"
 
-from reranker import Reranker
-from retriever import Retriever
+from src.retrieval.reranker import Reranker
+from src.retrieval.retriever import Retriever
 
 
 MODEL_LABELS = {
@@ -25,13 +25,11 @@ MODEL_LABELS = {
 def load_retriever(model_name):
     if model_name not in MODEL_LABELS:
         raise ValueError(f"Unknown embedding model: {model_name}.")
-    if Path.cwd() != Path(__file__).resolve().parents[1]:
+    if Path.cwd() != Path(__file__).resolve().parents[2]:
         raise ValueError("Run Streamlit from the repository root.")
     cache = Path("data/embeddings/chunks") / f"{model_name}_chunks.json"
     if not cache.is_file():
         raise FileNotFoundError(f"Restore the prepared embedding file at {cache}.")
-    if not any(Path("data/chunks").glob("*-chunks.json")):
-        raise FileNotFoundError("Restore the prepared passage files under data/chunks/.")
 
     return Retriever(model_name=model_name, top_k=20), Lock()
 
