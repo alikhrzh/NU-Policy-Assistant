@@ -2,7 +2,7 @@
 
 NU Policy Assistant is a local search app for Nazarbayev University policies. Ask a question in English or Russian to find relevant passages across **960 chunks from 12 documents**. Each result shows the original text, document ID, and source pages.
 
-The Streamlit app lets you compare semantic search with cross-encoder reranking. The project currently returns source passages. Answer generation with citations is planned.
+The Streamlit app lets you compare semantic search with cross-encoder reranking. The local app can also generate English or Russian answers with numbered source citations through Ollama.
 
 ## Live demo
 
@@ -125,10 +125,18 @@ python -m src.db.import_corpus
 
 PostgreSQL listens on `127.0.0.1:5433` and stores its data in a Docker volume. Run the commands above from the repository root to create the three tables and import the corpus. Then start Streamlit in the same terminal with `python -m streamlit run src/app.py`. Each successful search records the question, ordered chunk IDs, result count, embedding model, and reranking setting. Search reads passages from PostgreSQL and embeddings from local files. Restart Streamlit after importing a changed corpus to clear cached search results.
 
-## Next steps
+## Local answer generation
 
-1. Generate answers in English and Russian with citations to documents and pages.
-2. Evaluate cases with complete, partial, and missing evidence. Check whether each citation supports the claim it accompanies.
+Start Ollama and run `ollama pull qwen3.5:4b`. Search in Streamlit, then choose **Generate answer**. The generator uses up to five results and expands the first three with neighboring PostgreSQL chunks. Use **Answer sources** to inspect the exact passages sent to Ollama.
+
+To create a JSONL report for manual review on the dev split, run these commands with PostgreSQL and Ollama available:
+
+```bash
+python -m src.evaluation.evaluate_generation --output /tmp/generation-dev-neighbors.jsonl
+python -m src.evaluation.evaluate_generation --no-neighbors --output /tmp/generation-dev-no-neighbors.jsonl
+```
+
+The reports contain local source text. Review factual support and refusals manually. Citation validation checks numbering and flags uncited sentences without judging factual support. Set `OLLAMA_URL`, `OLLAMA_MODEL`, or `PROMPT_VERSION` to override defaults. Run the mocked tests with `python -m pytest tests/test_generation.py` after installing pytest.
 
 ## Source scope
 

@@ -2,6 +2,7 @@ import psycopg
 import streamlit as st
 
 from src.db.postgres import ChunkCorpusError, save_search
+from src.generation.generate import generate_answer
 from src.ui.ui_components import show_results
 from src.retrieval.ui_search import MODEL_LABELS, search
 from src.ui.ui_style import apply_style
@@ -44,6 +45,7 @@ if submitted:
             with st.spinner("Searching policy passages…"):
                 results = search(question, top_k, pool_size, use_reranker, model_name=model_name)
             st.session_state.policy_results = (question, model_name, results)
+            st.session_state.pop("policy_answer", None)
         except (Exception, SystemExit) as error:
             st.error(f"Search failed with {MODEL_LABELS[model_name]}.")
             if isinstance(error, (FileNotFoundError, ValueError)) and str(error).startswith(("Restore ", "Run ")):
@@ -69,6 +71,21 @@ if "policy_results" in st.session_state:
     st.text(searched_question, width="stretch")
     st.caption(MODEL_LABELS[searched_model])
     if results:
+        if st.button("Generate answer"):
+            with st.spinner("Generating an answer with local Ollama…"):
+                st.session_state.policy_answer = generate_answer(searched_question, results[:5])
+        if "policy_answer" in st.session_state:
+            generated = st.session_state.policy_answer
+            if generated["answer"]:
+                st.markdown(generated["answer"])
+                with st.expander("Answer sources"):
+                    for number, source in generated["sources"].items():
+                        first, last = source["page_start"], source["page_end"]
+                        pages = f"p. {first}" if first == last else f"pp. {first}–{last}"
+                        st.text(f"[{number}] {source['document_id']}, {pages}")
+                        st.write(source["text"])
+            for warning in generated["warnings"]:
+                st.warning(warning)
         show_results(results)
     else:
         st.info("No passages found.")
@@ -76,6 +93,6 @@ else:
     st.info("Search for a policy to see ranked passages and their source pages.")
 
 st.caption(
-    "Retrieval prototype. Results come from the document versions in this corpus and may be outdated; "
+    "Results come from the document versions in this corpus and may be outdated; "
     "verify with the university's official sources. Independent project, not an official university service."
 )
