@@ -43,7 +43,7 @@ def generate_answer(question, chunks, config=None):
             return result
 
         result["top_rerank_score"] = chunks[0].get("rerank_score")
-        sources = build_sources(chunks, config)
+        sources = build_sources(chunks, config, question=question)
         result["sources"] = sources
         messages = build_messages(question, sources, config.prompt_version)
         status, answer, metrics, warnings = ask_ollama(messages, config)

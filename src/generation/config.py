@@ -17,6 +17,7 @@ class GenerationConfig:
     neighbors: bool = True
     neighbor_count: int = 1
     expand_top: int = 3
+    continuation_only: bool = True
 
     @classmethod
     def from_env(cls):
@@ -35,4 +36,6 @@ class GenerationConfig:
             neighbors=os.getenv("GENERATION_NEIGHBORS", "true").lower() in {"1", "true", "yes"},
             neighbor_count=int(os.getenv("GENERATION_NEIGHBOR_COUNT", defaults.neighbor_count)),
             expand_top=int(os.getenv("GENERATION_EXPAND_TOP", defaults.expand_top)),
+            continuation_only=os.getenv("GENERATION_CONTINUATION_ONLY", "true").lower()
+            in {"1", "true", "yes"},
         )

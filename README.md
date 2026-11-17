@@ -127,16 +127,33 @@ PostgreSQL listens on `127.0.0.1:5433` and stores its data in a Docker volume. R
 
 ## Local answer generation
 
-Start Ollama and run `ollama pull qwen3.5:4b`. Search in Streamlit, then choose **Generate answer**. The generator uses up to five results and expands the first three with neighboring PostgreSQL chunks. Use **Answer sources** to inspect the exact passages sent to Ollama.
+Start Ollama and run `ollama pull qwen3.5:4b`. Search in Streamlit, then choose **Generate answer**. The generator checks up to five results for a cut-off ending and can fetch the next chunk from the same document in PostgreSQL. For class attendance questions, it skips continuations from the academic leave policy unless the question explicitly mentions academic leave. Use **Answer sources** to inspect the exact passages sent to Ollama.
 
 To create a JSONL report for manual review on the dev split, run these commands with PostgreSQL and Ollama available:
 
 ```bash
-python -m src.evaluation.evaluate_generation --output /tmp/generation-dev-neighbors.jsonl
+python -m src.evaluation.evaluate_generation --output /tmp/generation-dev-filtered.jsonl
 python -m src.evaluation.evaluate_generation --no-neighbors --output /tmp/generation-dev-no-neighbors.jsonl
 ```
 
-The reports contain local source text. Review factual support and refusals manually. Citation validation checks numbering and flags uncited sentences without judging factual support. Set `OLLAMA_URL`, `OLLAMA_MODEL`, or `PROMPT_VERSION` to override defaults. Run the mocked tests with `python -m pytest tests/test_generation.py` after installing pytest.
+Set `GENERATION_CONTINUATION_ONLY=false` to reproduce the earlier top-three neighbor expansion. The reports contain local source text. Review factual support and refusals manually. Citation validation checks numbering and flags uncited sentences without judging factual support. Set `OLLAMA_URL`, `OLLAMA_MODEL`, or `PROMPT_VERSION` to override defaults. Run the mocked tests with `python -m pytest tests/test_generation.py` after installing pytest.
+
+### Continuation experiment
+
+We replayed six dev requests covering three questions in English and Russian. Each request used the same five reranked chunks in the same order, Qwen3.5 4B, and prompt v2. The continuation-only runs replayed the corpus JSON with local Ollama.
+
+| Context strategy | Median prompt tokens | Answers with out-of-range citations |
+| --- | ---: | ---: |
+| Neighbors for the top three | 1,510 | 1/6 |
+| Original five chunks | 1,093 | 1/6 |
+| Selective continuation across all five ranks | 1,388 | 2/6 |
+| Selective continuation with attendance filter | 1,353 | 2/6 |
+
+- **Broken gym equipment (EN).** The fifth-ranked chunk (`0092`) ended mid-rule. Selective expansion added `0093`, which states that equipment faults should be reported to the Sports Complex Administration. The model cited source `[5]` correctly in both selective runs.
+- **Class absences (EN).** The attendance filter skipped two academic leave continuations and reduced the prompt from 1,394 to 1,184 tokens. The answer dropped an unrelated claim about repeating the year. It still mentioned a leave restriction from an original retrieved chunk.
+- **36 ECTS (EN and RU).** Both selective runs identified VPAA as the final approver. Both languages still produced an out-of-range citation, `[6]`.
+
+The attendance filter changed one of six answers relative to selective expansion alone. Citation numbering and factual support were reviewed separately.
 
 ## Source scope
 

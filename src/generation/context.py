@@ -1,3 +1,4 @@
+import re
 from collections import defaultdict
 
 from psycopg.rows import dict_row
@@ -48,14 +49,42 @@ def merge_passages(passages):
     return " ".join(words)
 
 
-def build_sources(chunks, config):
+def continuation_id(chunk):
+    ending = chunk["text"].rstrip().rstrip("\"'”’»)]}").rstrip()
+    if not ending or ending.endswith((".", "!", "?", ";")):
+        return None
+    next_id = neighbor_ids(chunk["chunk_id"], 1)
+    return next_id[-1] if next_id else None
+
+
+def build_sources(chunks, config, *, question=""):
+    attendance = re.search(
+        r"\battendance\b|\babsences?\b|\bmiss(?:ed|ing)?\b.*\b(?:class(?:es)?|lectures?|lessons?)\b"
+        r"|посещаем|пропуск|пропущ|пропуст|отсутств",
+        question,
+        re.IGNORECASE,
+    )
+    academic_leave = re.search(
+        r"\b(?:academic leave|leave of absence|loa)\b|академическ\w* отпуск|академотпуск|академ\s+отпуск",
+        question,
+        re.IGNORECASE,
+    )
+    skip_leave_continuations = attendance and not academic_leave
+
     ranked = {}
     for chunk in chunks:
         ranked.setdefault(chunk["chunk_id"], chunk)
     originals = set(ranked)
     ranked = list(ranked.values())
     wanted = defaultdict(list)
-    if config.neighbors:
+    if config.neighbors and config.continuation_only:
+        for chunk in ranked:
+            if skip_leave_continuations and chunk["document_id"] == "leave-dismissal-withdrawal":
+                continue
+            candidate = continuation_id(chunk)
+            if candidate is not None and candidate not in originals:
+                wanted[chunk["chunk_id"]].append(candidate)
+    elif config.neighbors:
         for chunk in ranked[:config.expand_top]:
             wanted[chunk["chunk_id"]] = [
                 candidate for candidate in neighbor_ids(chunk["chunk_id"], config.neighbor_count)
